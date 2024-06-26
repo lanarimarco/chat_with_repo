@@ -1,10 +1,10 @@
 from chat_with_repo import OPENAI_API_KEY
-from chat_with_repo.assistant.commit_tools import GetCommitByPathTool
-from chat_with_repo.assistant.pull_request_tools import (
+from chat_with_repo.commit_tools import GetCommitByPathTool
+from chat_with_repo.pull_request_tools import (
     GetPullRequestByCommitTool,
     GetPullRequestByPathTool,
 )
-from chat_with_repo.assistant.pull_request_tools import (
+from chat_with_repo.pull_request_tools import (
     GetPullRequestsTool,
 )
 
@@ -19,6 +19,10 @@ from langchain_openai import ChatOpenAI
 from collections import deque
 from typing import List
 
+class State:
+    def __init__(self):
+        self.owner = None
+        self.repo = None
 
 class GitHubAssistant:
 
