@@ -1,4 +1,4 @@
-from chat_with_repo.assistant.GitHubAssistant import GitHubAssistant
+from chat_with_repo.assistant.assistant import GitHubAssistant
 
 
 def test_get_title_by_commit():
@@ -36,7 +36,6 @@ def test_if_branch_is_merged_to_develop():
     """
     response = assistant.chat(message)
     assert "YES" in response.upper()
-
 
 
 def test_if_branch_is_not_merged_to_develop():

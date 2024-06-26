@@ -1,6 +1,7 @@
 import streamlit as st
-from chat_with_repo.assistant.GitHubAssistant import GitHubAssistant
+from chat_with_repo.assistant.assistant import GitHubAssistant
 from enum import Enum
+
 
 class Role(Enum):
     USER = "user"
@@ -45,8 +46,9 @@ def main():
         with st.chat_message(name=Role.ASSISTANT.value, avatar=Role.ASSISTANT.avatar):
             st.markdown(response)
         # Add assistant response to chat history
-        st.session_state.messages.append({"role": Role.ASSISTANT.value, "content": response})
-
+        st.session_state.messages.append(
+            {"role": Role.ASSISTANT.value, "content": response}
+        )
 
 
 def process_message(message):

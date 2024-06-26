@@ -1,13 +1,15 @@
 from datetime import datetime
 import sys
 from typing import List
+from chat_with_repo.assistant.commit_tools import get_commits_by_path
+from chat_with_repo.assistant.pull_request_tools import (
+    get_pull_requests,
+    get_pull_requests_by_commit,
+    get_pull_requests_by_path,
+)
 from chat_with_repo.model import PullRequest, PullRequestFilter
 
-from chat_with_repo.tools import (
-    get_commits_by_path,
-    get_pull_requests_by_commit,
-    get_pull_requests,
-    get_pull_requests_by_path,
+from chat_with_repo.assistant.commit_tools import (
     is_commit_in_branch,
 )
 
@@ -47,7 +49,9 @@ def test_get_pull_requests_opened_from_branch():
     opened_from_branch = "perf/chain_with_cache"
     owner = "smeup"
     repo = "jariko"
-    pull_request_filter = PullRequestFilter(opened_from_branch=opened_from_branch, target_branch="develop")
+    pull_request_filter = PullRequestFilter(
+        opened_from_branch=opened_from_branch, target_branch="develop"
+    )
     pull_requests: List[PullRequest] = get_pull_requests(
         pull_request_filter,
         owner=owner,
@@ -57,11 +61,13 @@ def test_get_pull_requests_opened_from_branch():
     assert len(pull_requests) == 1
     assert pull_requests[0].number == 535
 
-     # Test case2: perf/chain_with_cache branch
+    # Test case2: perf/chain_with_cache branch
     opened_from_branch = "perf/avoid-logging-reconfiguration"
     owner = "smeup"
     repo = "jariko"
-    pull_request_filter = PullRequestFilter(opened_from_branch=opened_from_branch, target_branch="develop")
+    pull_request_filter = PullRequestFilter(
+        opened_from_branch=opened_from_branch, target_branch="develop"
+    )
     pull_requests: List[PullRequest] = get_pull_requests(
         pull_request_filter,
         owner=owner,
@@ -94,9 +100,6 @@ def test_get_pull_requests_by_title():
 
     assert len(pull_requests) == 1
     assert pull_requests[0].number == 549
-
-
-
 
 
 def test_get_pull_requests_by_title_find_none():
@@ -180,9 +183,7 @@ def test_get_closed_but_not_merged_pull_request():
     owner = "smeup"
     repo = "jariko"
     pull_requests: List[PullRequest] = get_pull_requests(
-        PullRequestFilter(merged=False, closed=True),
-        owner=owner,
-        repo=repo
+        PullRequestFilter(merged=False, closed=True), owner=owner, repo=repo
     )
 
     assert len(pull_requests) >= 13

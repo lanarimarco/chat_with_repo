@@ -1,11 +1,12 @@
 from chat_with_repo import OPENAI_API_KEY
-from chat_with_repo.assistant.tools import (
-    GetCommitByPathTool,
+from chat_with_repo.assistant.commit_tools import GetCommitByPathTool
+from chat_with_repo.assistant.pull_request_tools import (
     GetPullRequestByCommitTool,
     GetPullRequestByPathTool,
+)
+from chat_with_repo.assistant.pull_request_tools import (
     GetPullRequestsTool,
 )
-from chat_with_repo.tools import get_pull_requests_by_commit
 
 
 from langchain.agents import AgentExecutor, create_openai_tools_agent
