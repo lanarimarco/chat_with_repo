@@ -3,6 +3,11 @@ from typing import Optional
 from pydantic import BaseModel
 from enum import Enum
 
+class State:
+    def __init__(self, owner=None, repo=None):
+        self.owner = owner
+        self.repo = repo
+
 
 class Head(BaseModel):
     label: str

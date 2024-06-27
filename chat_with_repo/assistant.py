@@ -1,5 +1,6 @@
 from chat_with_repo import OPENAI_API_KEY
 from chat_with_repo.commit_tools import GetCommitByPathTool
+from chat_with_repo.model import State
 from chat_with_repo.pull_request_tools import (
     GetPullRequestByCommitTool,
     GetPullRequestByPathTool,
@@ -17,12 +18,7 @@ from langchain_openai import ChatOpenAI
 
 
 from collections import deque
-from typing import List
 
-class State:
-    def __init__(self):
-        self.owner = None
-        self.repo = None
 
 class GitHubAssistant:
 
@@ -44,11 +40,10 @@ class GitHubAssistant:
             chat_history_length (int): The maximum length of the chat history. Defaults to 10.
             topK (int): The number of top results to return. Defaults to 10.
         """
-        self.owner = owner
-        self.repo = repo
         self.model = model
         self.chat_history = deque(maxlen=chat_history_length)
         self.topK = topK
+        self.state = State(owner=owner, repo=repo)
 
     system = """
     You are a virtual assistant that helps with GitHub-related tasks.
@@ -72,18 +67,16 @@ class GitHubAssistant:
         llm = ChatOpenAI(model=self.model, temperature=0, api_key=OPENAI_API_KEY)
         tools = [
             GetPullRequestByCommitTool(
-                repo=self.repo, owner=self.owner, topK=self.topK
+                repo=self.state.repo, owner=self.state.owner, topK=self.topK
             ),
-            GetCommitByPathTool(repo=self.repo, owner=self.owner, topK=self.topK),
-            GetPullRequestByPathTool(repo=self.repo, owner=self.owner, topK=self.topK),
-            GetPullRequestsTool(repo=self.repo, owner=self.owner, topK=self.topK),
+            GetCommitByPathTool(repo=self.state.repo, owner=self.state.owner, topK=self.topK),
+            GetPullRequestByPathTool(repo=self.state.repo, owner=self.state.owner, topK=self.topK),
+            GetPullRequestsTool(repo=self.state.repo, owner=self.state.owner, topK=self.topK),
         ]
         agent = create_openai_tools_agent(llm, tools, self.prompt)
         agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
         agent_response = agent_executor.invoke(
-            input={"input": message, "chat_history": list(self.chat_history)},
-            owner=self.owner,
-            repo=self.repo,
+            input={"input": message, "chat_history": list(self.chat_history)}
         )
         self.chat_history.append(HumanMessage(content=agent_response["input"]))
         self.chat_history.append(AIMessage(content=agent_response["output"]))
