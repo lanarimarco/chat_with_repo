@@ -1,5 +1,5 @@
 import streamlit as st
-from chat_with_repo.assistant.assistant import GitHubAssistant
+from chat_with_repo.assistant import GitHubAssistant
 from enum import Enum
 
 

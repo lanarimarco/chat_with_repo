@@ -4,11 +4,10 @@ from langchain_core.tools import BaseTool
 
 from typing import Callable, List, Tuple, Type
 
-from pydantic import BaseModel
 import requests
 
 from chat_with_repo import GITHUB_TOKEN
-from chat_with_repo.assistant.commit_tools import get_commits_by_path
+from chat_with_repo.commit_tools import get_commits_by_path
 from chat_with_repo.model import PullRequest, PullRequestState, PullRequestFilter
 
 
