@@ -1,4 +1,4 @@
-from chat_with_repo.assistant.assistant import GitHubAssistant
+from chat_with_repo.assistant import GitHubAssistant
 
 
 def test_get_title_by_commit():

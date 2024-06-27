@@ -1,15 +1,14 @@
-from datetime import datetime
-import sys
+
 from typing import List
-from chat_with_repo.assistant.commit_tools import get_commits_by_path
-from chat_with_repo.assistant.pull_request_tools import (
+from chat_with_repo.commit_tools import get_commits_by_path
+from chat_with_repo.pull_request_tools import (
     get_pull_requests,
     get_pull_requests_by_commit,
     get_pull_requests_by_path,
 )
 from chat_with_repo.model import PullRequest, PullRequestFilter
 
-from chat_with_repo.assistant.commit_tools import (
+from chat_with_repo.commit_tools import (
     is_commit_in_branch,
 )
 
