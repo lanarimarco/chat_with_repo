@@ -10,22 +10,38 @@ import requests
 from typing import Callable, List, Type
 
 
-class GetCommitByPathSchema(BaseModel):
+class GetCommitsByPathSchema(BaseModel):
     path: str = Field(..., description="The path to the file.")
 
 
-class GetCommitByPathTool(BaseTool):
+class GetCommitsByPathTool(BaseTool):
     owner: str
     repo: str
     topK: int = 10
-    args_schema: Type[BaseModel] = GetCommitByPathSchema
+    args_schema: Type[BaseModel] = GetCommitsByPathSchema
     name: str = "get_commits_by_path"
     description = "Retrieves a list of commits associated with a specific file."
 
-    def _run(self, path: str):
+    def _run(self, path: str) -> List[Commit]:
         return get_commits_by_path(path=path, owner=self.owner, repo=self.repo)[
             : self.topK
         ]
+
+
+class IsCommitInBranchSchema(BaseModel):
+    commit_sha: str = Field(..., description="The SHA of the commit.")
+    branch: str = Field(..., description="The name of the branch.")
+
+
+class IsCommitInBranchTool(BaseTool):
+    owner: str
+    repo: str
+    args_schema: Type[BaseModel] = IsCommitInBranchSchema
+    name: str = "is_commit_in_branch"
+    description = "Checks if a commit is in a given branch."
+
+    def _run(self, commit_sha: str, branch: str) -> bool:
+        return is_commit_in_branch(commit_sha, branch, owner=self.owner, repo=self.repo)
 
 
 def get_commits_by_path(
@@ -58,7 +74,41 @@ def get_commits_by_path(
         raise Exception(f"Error: {response.status_code} - {response.text}")
 
 
-def get_commits(
+def is_commit_in_branch(
+    commit_sha: str, branch: str, owner: str = "smeup", repo: str = "jariko"
+) -> bool:
+    """
+    Checks if a commit is in a given branch.
+
+    Args:
+        commit_sha (str): The SHA of the commit.
+        branch (str): The name of the branch.
+        owner (str, optional): The owner of the repository. Defaults to "smeup".
+        repo (str, optional): The name of the repository. Defaults to "jariko".
+
+    Returns:
+        bool: True if the commit is in the branch, False otherwise.
+    """
+    matched = False
+
+    def exit_condition(commit: Commit):
+        nonlocal matched
+        if commit.sha == commit_sha:
+            matched = True
+            return True
+        return False
+
+    __get_commits(
+        commit_filter=CommitFilter(sha=branch),
+        owner=owner,
+        repo=repo,
+        exit_condition=exit_condition,
+    )
+
+    return matched
+
+
+def __get_commits(
     commit_filter: CommitFilter = CommitFilter(),
     owner: str = "smeup",
     repo: str = "jariko",
@@ -111,37 +161,3 @@ def get_commits(
                     return
         else:
             raise Exception(f"Error: {response.status_code} - {response.text}")
-
-
-def is_commit_in_branch(
-    commit_sha: str, branch: str, owner: str = "smeup", repo: str = "jariko"
-) -> bool:
-    """
-    Checks if a commit is in a given branch.
-
-    Args:
-        commit_sha (str): The SHA of the commit.
-        branch (str): The name of the branch.
-        owner (str, optional): The owner of the repository. Defaults to "smeup".
-        repo (str, optional): The name of the repository. Defaults to "jariko".
-
-    Returns:
-        bool: True if the commit is in the branch, False otherwise.
-    """
-    matched = False
-
-    def exit_condition(commit: Commit):
-        nonlocal matched
-        if commit.sha == commit_sha:
-            matched = True
-            return True
-        return False
-
-    get_commits(
-        commit_filter=CommitFilter(sha=branch),
-        owner=owner,
-        repo=repo,
-        exit_condition=exit_condition,
-    )
-
-    return matched

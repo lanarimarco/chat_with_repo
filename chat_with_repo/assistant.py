@@ -1,5 +1,8 @@
 from chat_with_repo import OPENAI_API_KEY
-from chat_with_repo.commit_tools import GetCommitByPathTool
+from chat_with_repo.commit_tools import (
+    GetCommitsByPathTool,
+    IsCommitInBranchTool,
+)
 from chat_with_repo.model import State
 from chat_with_repo.pull_request_tools import (
     GetPullRequestByCommitTool,
@@ -66,12 +69,19 @@ class GitHubAssistant:
     def chat(self, message: str) -> str:
         llm = ChatOpenAI(model=self.model, temperature=0, api_key=OPENAI_API_KEY)
         tools = [
+            GetPullRequestsTool(
+                repo=self.state.repo, owner=self.state.owner, topK=self.topK
+            ),
             GetPullRequestByCommitTool(
                 repo=self.state.repo, owner=self.state.owner, topK=self.topK
             ),
-            GetCommitByPathTool(repo=self.state.repo, owner=self.state.owner, topK=self.topK),
-            GetPullRequestByPathTool(repo=self.state.repo, owner=self.state.owner, topK=self.topK),
-            GetPullRequestsTool(repo=self.state.repo, owner=self.state.owner, topK=self.topK),
+            GetPullRequestByPathTool(
+                repo=self.state.repo, owner=self.state.owner, topK=self.topK
+            ),
+            GetCommitsByPathTool(
+                repo=self.state.repo, owner=self.state.owner, topK=self.topK
+            ),
+            IsCommitInBranchTool(repo=self.state.repo, owner=self.state.owner),
         ]
         agent = create_openai_tools_agent(llm, tools, self.prompt)
         agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)

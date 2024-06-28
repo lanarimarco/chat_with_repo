@@ -23,7 +23,7 @@ class GetPullRequestByCommitTool(BaseTool):
     name: str = "get_pull_requests_by_commit"
     description = "Retrieves a list of pull requests associated with a specific commit."
 
-    def _run(self, commit_sha: str):
+    def _run(self, commit_sha: str) -> List[PullRequest]:
         return get_pull_requests_by_commit(
             commit_sha=commit_sha, owner=self.owner, repo=self.repo
         )[: self.topK]
@@ -41,7 +41,7 @@ class GetPullRequestByPathTool(BaseTool):
     name: str = "get_pull_requests_by_path"
     description = "Retrieves a list of pull requests associated with a specific file."
 
-    def _run(self, path: str):
+    def _run(self, path: str) -> List[PullRequest]:
         return get_pull_requests_by_path(path=path, owner=self.owner, repo=self.repo)[
             : self.topK
         ]
@@ -80,7 +80,7 @@ class GetPullRequestsTool(BaseTool):
         opened_from_branch: str = None,
         target_branch: str = "develop",
         state: PullRequestState = PullRequestState.ALL,
-    ):
+    ) -> List[PullRequest]:
         return get_pull_requests(
             PullRequestFilter(
                 number=number,

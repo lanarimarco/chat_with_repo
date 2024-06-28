@@ -1,12 +1,11 @@
-
 from typing import List
-from chat_with_repo.commit_tools import get_commits_by_path
+from chat_with_repo.commit_tools import __get_commits, get_commits_by_path
 from chat_with_repo.pull_request_tools import (
     get_pull_requests,
     get_pull_requests_by_commit,
     get_pull_requests_by_path,
 )
-from chat_with_repo.model import PullRequest, PullRequestFilter
+from chat_with_repo.model import CommitFilter, PullRequest, PullRequestFilter
 
 from chat_with_repo.commit_tools import (
     is_commit_in_branch,
@@ -127,17 +126,6 @@ def test_get_pull_requests_by_body_find():
     assert pull_requests[0].number == 528
 
 
-def test_get_commits_by_path():
-    # Test case 1: Verify that the correct pull requests are returned for a given file
-    path = "rpgJavaInterpreter-core/src/main/kotlin/com/smeup/rpgparser/execution/Configuration.kt"
-    owner = "smeup"
-    repo = "jariko"
-
-    commits = get_commits_by_path(path=path, owner=owner, repo=repo)
-
-    assert len(commits) > 0
-
-
 def test_get_pull_requests_by_path():
     # Test case 1: Verify that the correct pull requests are returned for a given file
     path = "rpgJavaInterpreter-core/src/main/kotlin/com/smeup/rpgparser/execution/Configuration.kt"
@@ -154,16 +142,6 @@ def test_get_pull_requests_by_path():
             break
     else:
         assert False
-
-
-def test_is_commit_in_branch():
-    # Test case 1: Verify that the commit is in the branch
-    commit_sha = "7d743cdad588a17f2ccad03c190b372554c4bbb5"
-    branch = "develop"
-    owner = "smeup"
-    repo = "jariko"
-
-    assert is_commit_in_branch(commit_sha, branch, owner, repo)
 
 
 def test_get_not_merged_pull_request():
@@ -186,3 +164,24 @@ def test_get_closed_but_not_merged_pull_request():
     )
 
     assert len(pull_requests) >= 13
+
+
+def test_get_commits_by_path():
+    # Test case 1: Verify that the correct pull requests are returned for a given file
+    path = "rpgJavaInterpreter-core/src/main/kotlin/com/smeup/rpgparser/execution/Configuration.kt"
+    owner = "smeup"
+    repo = "jariko"
+
+    commits = get_commits_by_path(path=path, owner=owner, repo=repo)
+
+    assert len(commits) > 0
+
+
+def test_is_commit_in_branch():
+    # Test case 1: Verify that the commit is in the branch
+    commit_sha = "7d743cdad588a17f2ccad03c190b372554c4bbb5"
+    branch = "develop"
+    owner = "smeup"
+    repo = "jariko"
+
+    assert is_commit_in_branch(commit_sha, branch, owner, repo)
