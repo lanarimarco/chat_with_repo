@@ -1,12 +1,28 @@
 from datetime import datetime
-from typing import Optional
+from typing import Callable, Optional
 from pydantic import BaseModel
 from enum import Enum
 
+
 class State:
-    def __init__(self, owner=None, repo=None):
+    def __init__(self, owner="smeup", repo="jariko"):
         self.owner = owner
-        self.repo = repo
+        self._repo = repo
+        self.on_change_repo: Callable[[str], None] = None
+
+    def is_repo_selected(self):
+        return self.owner is not None and self.repo is not None
+    
+    @property
+    def repo(self):
+        return self._repo
+
+    @repo.setter
+    def repo(self, value):
+        changed = self._repo != value
+        self._repo = value
+        if changed and self.on_change_repo is not None:
+            self.on_change_repo(value)
 
 
 class Head(BaseModel):
@@ -66,10 +82,12 @@ class CommitFilter(BaseModel):
     author: Optional[str] = None
     committer: Optional[str] = None
 
+
 class PullRequestState(Enum):
     OPENED = "opened"
     CLOSED = "closed"
     ALL = "all"
+
 
 class PullRequestFilter(BaseModel):
     """
