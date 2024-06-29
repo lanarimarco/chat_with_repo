@@ -16,7 +16,7 @@ class Role(Enum):
 
 
 def main():
-    st.title("Chat with Jariko")
+    st.title("Chat with smeup repo")
 
     # Initialize chat history
     if "messages" not in st.session_state:
