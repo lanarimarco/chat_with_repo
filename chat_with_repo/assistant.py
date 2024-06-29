@@ -3,6 +3,7 @@ from chat_with_repo.commit_tools import (
     GetCommitsByPathTool,
     IsCommitInBranchTool,
 )
+from chat_with_repo.misc_tools import SelectGitHubRepoTool
 from chat_with_repo.model import State
 from chat_with_repo.pull_request_tools import (
     GetPullRequestByCommitTool,
@@ -22,7 +23,6 @@ from langchain_openai import ChatOpenAI
 
 from collections import deque
 
-
 class GitHubAssistant:
 
     def __init__(
@@ -35,14 +35,19 @@ class GitHubAssistant:
     ):
         """
         Initializes a new instance of the GitHubAssistant class.
-
-        Args:
-            owner (str): The owner of the GitHub repository. Defaults to "smeup".
-            repo (str): The name of the GitHub repository. Defaults to "jariko".
-            model (str): The name of the GPT model to use. Defaults to "gpt-3.5-turbo".
-            chat_history_length (int): The maximum length of the chat history. Defaults to 10.
-            topK (int): The number of top results to return. Defaults to 10.
+        args:
+            owner: The owner of the GitHub repository. Defaults to "smeup".
+            repo: The name of the GitHub repository. Defaults to "jariko".
+            model: The OpenAI model to use for the assistant. Defaults to "gpt-3.5-turbo".
+            chat_history_length: The maximum number of chat messages to keep in the chat history. Defaults to 10.
+            topK: The maximum number of results to return from the GitHub API.
         """
+        if not owner:
+            raise ValueError("owner must be specified")
+        if not repo:
+            raise ValueError("repo must be specified")
+        if not model:
+            raise ValueError("model must be specified")
         self.model = model
         self.chat_history = deque(maxlen=chat_history_length)
         self.topK = topK
@@ -67,22 +72,27 @@ class GitHubAssistant:
         self.chat_history.clear()
 
     def chat(self, message: str) -> str:
+        self.state.on_change_repo = lambda repo: self.new_thread()
         llm = ChatOpenAI(model=self.model, temperature=0, api_key=OPENAI_API_KEY)
-        tools = [
-            GetPullRequestsTool(
-                repo=self.state.repo, owner=self.state.owner, topK=self.topK
-            ),
-            GetPullRequestByCommitTool(
-                repo=self.state.repo, owner=self.state.owner, topK=self.topK
-            ),
-            GetPullRequestByPathTool(
-                repo=self.state.repo, owner=self.state.owner, topK=self.topK
-            ),
-            GetCommitsByPathTool(
-                repo=self.state.repo, owner=self.state.owner, topK=self.topK
-            ),
-            IsCommitInBranchTool(repo=self.state.repo, owner=self.state.owner),
-        ]
+        if not self.state.is_repo_selected():
+            tools = [SelectGitHubRepoTool(state=self.state)]
+        else:
+            tools = [
+                SelectGitHubRepoTool(state=self.state),
+                GetPullRequestsTool(
+                    repo=self.state.repo, owner=self.state.owner, topK=self.topK
+                ),
+                GetPullRequestByCommitTool(
+                    repo=self.state.repo, owner=self.state.owner, topK=self.topK
+                ),
+                GetPullRequestByPathTool(
+                    repo=self.state.repo, owner=self.state.owner, topK=self.topK
+                ),
+                GetCommitsByPathTool(
+                    repo=self.state.repo, owner=self.state.owner, topK=self.topK
+                ),
+                IsCommitInBranchTool(repo=self.state.repo, owner=self.state.owner),
+            ]
         agent = create_openai_tools_agent(llm, tools, self.prompt)
         agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
         agent_response = agent_executor.invoke(
