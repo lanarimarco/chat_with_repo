@@ -1,3 +1,4 @@
+from typing import Callable
 from chat_with_repo import OPENAI_API_KEY
 from chat_with_repo.commit_tools import (
     GetCommitsByPathTool,
@@ -32,6 +33,7 @@ class GitHubAssistant:
         model: str = "gpt-3.5-turbo",
         chat_history_length: int = 10,
         topK: int = 10,
+        on_change_repo: Callable[[str], None] = None,
     ):
         """
         Initializes a new instance of the GitHubAssistant class.
@@ -41,6 +43,7 @@ class GitHubAssistant:
             model: The OpenAI model to use for the assistant. Defaults to "gpt-3.5-turbo".
             chat_history_length: The maximum number of chat messages to keep in the chat history. Defaults to 10.
             topK: The maximum number of results to return from the GitHub API.
+            on_change_repo: A callback function that is called when the repository is changed.
         """
         if not owner:
             raise ValueError("owner must be specified")
@@ -52,6 +55,7 @@ class GitHubAssistant:
         self.chat_history = deque(maxlen=chat_history_length)
         self.topK = topK
         self.state = State(owner=owner, repo=repo)
+        self.on_change_repo = on_change_repo
 
     system = """
     You are a virtual assistant that helps with GitHub-related tasks.
@@ -73,7 +77,7 @@ class GitHubAssistant:
         self.chat_history.clear()
 
     def chat(self, message: str) -> str:
-        self.state.on_change_repo = lambda repo: self.new_thread()
+        self.state.on_change_repo = lambda repo: self.__on_change_repo(repo)
         llm = ChatOpenAI(model=self.model, temperature=0, api_key=OPENAI_API_KEY)
         if not self.state.is_repo_selected():
             tools = [SelectGitHubRepoTool(state=self.state)]
@@ -102,3 +106,8 @@ class GitHubAssistant:
         self.chat_history.append(HumanMessage(content=agent_response["input"]))
         self.chat_history.append(AIMessage(content=agent_response["output"]))
         return agent_response["output"]
+    
+    def __on_change_repo(self, new_repo: str):
+        if self.on_change_repo is not None:
+            self.on_change_repo(new_repo)
+        self.new_thread()
