@@ -55,6 +55,14 @@ def test_get_pull_requests_by_title():
     response = assistant.chat(message)
     assert "549" in response
 
+def test_get_pull_requests_by_commit():
+    assistant = GitHubAssistant()
+    message = """
+        Hello, tell me the pull request containing the commit 58fd35f96f1eb9f087d9613de1cb37b96b2d2e7f
+    """
+    response = assistant.chat(message)
+    assert "4" in response
+
 
 def test_get_pull_requests_by_description():
     assistant = GitHubAssistant()
@@ -99,3 +107,11 @@ def test_is_commit_in_branch():
     """
     response = assistant.chat(message)
     assert "YES" in response.upper()
+
+def test_get_commits_by_pull_request():
+    assistant = GitHubAssistant()
+    message = """
+        Hello, tell me the commits associated with the pull request 554
+    """
+    response = assistant.chat(message)
+    assert "9474e3ff4f600c9511b14c32e6a6b305350fe0dc" in response

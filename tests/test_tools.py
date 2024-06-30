@@ -1,5 +1,8 @@
 from typing import List
-from chat_with_repo.commit_tools import __get_commits, get_commits_by_path
+from chat_with_repo.commit_tools import (
+    get_commits_by_path,
+    get_commits_by_pull_request,
+)
 from chat_with_repo.pull_request_tools import (
     get_pull_requests,
     get_pull_requests_by_commit,
@@ -166,6 +169,20 @@ def test_get_closed_but_not_merged_pull_request():
     assert len(pull_requests) >= 13
 
 
+def test_get_pull_requests_by_commit():
+    # Test case 1: Verify that the correct pull request is returned for a given commit SHA
+    commit_sha = "58fd35f96f1eb9f087d9613de1cb37b96b2d2e7f"
+    owner = "smeup"
+    repo = "jariko"
+
+    pull_requests: List[PullRequest] = get_pull_requests_by_commit(
+        commit_sha=commit_sha, owner=owner, repo=repo
+    )
+
+    assert len(pull_requests) == 1
+    assert pull_requests[0].number == 4
+
+
 def test_get_commits_by_path():
     # Test case 1: Verify that the correct pull requests are returned for a given file
     path = "rpgJavaInterpreter-core/src/main/kotlin/com/smeup/rpgparser/execution/Configuration.kt"
@@ -185,3 +202,16 @@ def test_is_commit_in_branch():
     repo = "jariko"
 
     assert is_commit_in_branch(commit_sha, branch, owner, repo)
+
+
+def test_get_commits_by_pull_request():
+    # Test case 1: Verify that the commits are returned correctly
+    number = 554
+    owner = "smeup"
+    repo = "jariko"
+
+    commits = get_commits_by_pull_request(number, owner, repo)
+    assert any(
+        commit.sha == "9474e3ff4f600c9511b14c32e6a6b305350fe0dc" for commit in commits
+    )
+

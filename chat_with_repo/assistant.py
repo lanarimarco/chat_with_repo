@@ -2,12 +2,13 @@ from typing import Callable
 from chat_with_repo import OPENAI_API_KEY
 from chat_with_repo.commit_tools import (
     GetCommitsByPathTool,
+    GetCommitsByPullRequestTool,
     IsCommitInBranchTool,
 )
 from chat_with_repo.misc_tools import SelectGitHubRepoTool
 from chat_with_repo.model import State
 from chat_with_repo.pull_request_tools import (
-    GetPullRequestByCommitTool,
+    GetPullRequestsByCommitTool,
     GetPullRequestByPathTool,
 )
 from chat_with_repo.pull_request_tools import (
@@ -23,6 +24,7 @@ from langchain_openai import ChatOpenAI
 
 
 from collections import deque
+
 
 class GitHubAssistant:
 
@@ -87,13 +89,16 @@ class GitHubAssistant:
                 GetPullRequestsTool(
                     repo=self.state.repo, owner=self.state.owner, topK=self.topK
                 ),
-                GetPullRequestByCommitTool(
+                GetPullRequestsByCommitTool(
                     repo=self.state.repo, owner=self.state.owner, topK=self.topK
                 ),
                 GetPullRequestByPathTool(
                     repo=self.state.repo, owner=self.state.owner, topK=self.topK
                 ),
                 GetCommitsByPathTool(
+                    repo=self.state.repo, owner=self.state.owner, topK=self.topK
+                ),
+                GetCommitsByPullRequestTool(
                     repo=self.state.repo, owner=self.state.owner, topK=self.topK
                 ),
                 IsCommitInBranchTool(repo=self.state.repo, owner=self.state.owner),
@@ -106,7 +111,7 @@ class GitHubAssistant:
         self.chat_history.append(HumanMessage(content=agent_response["input"]))
         self.chat_history.append(AIMessage(content=agent_response["output"]))
         return agent_response["output"]
-    
+
     def __on_change_repo(self, new_repo: str):
         if self.on_change_repo is not None:
             self.on_change_repo(new_repo)

@@ -43,6 +43,22 @@ class IsCommitInBranchTool(BaseTool):
     def _run(self, commit_sha: str, branch: str) -> bool:
         return is_commit_in_branch(commit_sha, branch, owner=self.owner, repo=self.repo)
 
+class GetCommitsByPullRequestSchema(BaseModel):
+    number: int = Field(..., description="The number of the pull request.")
+
+class GetCommitsByPullRequestTool(BaseTool):
+    owner: str
+    repo: str
+    topK: int = 10
+    args_schema: Type[BaseModel] = GetCommitsByPullRequestSchema
+    name: str = "get_commits_by_pull_request"
+    description = "Retrieves a list of commits associated with a specific pull request."
+
+    def _run(self, number: int) -> List[Commit]:
+        return get_commits_by_pull_request(number=number, owner=self.owner, repo=self.repo)[
+            : self.topK
+        ]
+
 
 def get_commits_by_path(
     path: str, owner: str = "smeup", repo: str = "jariko"
@@ -68,6 +84,33 @@ def get_commits_by_path(
     }
 
     response = requests.get(url, headers=headers, params=params)
+    if response.status_code == 200:
+        return [Commit.model_validate(commit) for commit in response.json()]
+    else:
+        raise Exception(f"Error: {response.status_code} - {response.text}")
+
+
+def get_commits_by_pull_request(
+    number: int, owner: str = "smeup", repo: str = "jariko"
+) -> List[Commit]:
+    """
+    Retrieves the commits that have modified a given pull request.
+
+    Args:
+        number (int): The number of the pull request.
+        owner (str, optional): The owner of the repository. Defaults to "smeup".
+        repo (str, optional): The name of the repository. Defaults to "jariko".
+
+    Returns:
+        List[Commit]: A list of Commit representing the retrieved commits.
+    """
+    url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{number}/commits"
+    headers = {
+        "Accept": "application/vnd.github.v3+json",
+        "Authorization": f"token {GITHUB_TOKEN}",
+    }
+
+    response = requests.get(url, headers=headers)
     if response.status_code == 200:
         return [Commit.model_validate(commit) for commit in response.json()]
     else:
