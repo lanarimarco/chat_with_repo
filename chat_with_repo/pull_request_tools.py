@@ -2,13 +2,30 @@ from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_core.tools import BaseTool
 
 
-from typing import Callable, List, Tuple, Type
+from typing import Callable, List, Optional, Tuple, Type
 
 import requests
 
 from chat_with_repo import GITHUB_TOKEN
 from chat_with_repo.commit_tools import get_commits_by_path
 from chat_with_repo.model import PullRequest, PullRequestState, PullRequestFilter
+
+
+class GetPullRequestByNumberSchema(BaseModel):
+    number: int = Field(..., description="The number of the pull request.")
+
+
+class GetPullRequestByNumberTool(BaseTool):
+    owner: str
+    repo: str
+    args_schema: Type[BaseModel] = GetPullRequestByNumberSchema
+    name: str = "get_pull_request_by_number"
+    description = "Retrieves a pull request by its number."
+
+    def _run(self, number: int) -> Optional[PullRequest]:
+        return get_pull_request_by_number(
+            number=number, owner=self.owner, repo=self.repo
+        )
 
 
 class GetPullRequestsByCommitShema(BaseModel):
@@ -66,7 +83,6 @@ class GetPullRequestsByCommitTool(BaseTool):
 
 
 class GetPullRequestsSchema(BaseModel):
-    number: int = Field(description="The pull request number.", default=None)
     title: str = Field(description="The title of the pull request.", default=None)
     body: str = Field(
         description="The body or description of the pull request.", default=None
@@ -92,7 +108,6 @@ class GetPullRequestsTool(BaseTool):
 
     def _run(
         self,
-        number: int = None,
         title: str = None,
         body: str = None,
         opened_from_branch: str = None,
@@ -101,7 +116,6 @@ class GetPullRequestsTool(BaseTool):
     ) -> List[PullRequest]:
         return get_pull_requests(
             PullRequestFilter(
-                number=number,
                 title=title,
                 body=body,
                 opened_from_branch=opened_from_branch,
@@ -111,6 +125,33 @@ class GetPullRequestsTool(BaseTool):
             owner=self.owner,
             repo=self.repo,
         )[: self.topK]
+
+
+def get_pull_request_by_number(
+    number: int, owner: str = "smeup", repo: str = "jariko"
+) -> Optional[PullRequest]:
+    """
+    Retrieves a pull request by its number.
+        number (int): The number of the pull request.
+        owner (str, optional): The owner of the repository. Defaults to "smeup".
+        repo (str, optional): The name of the repository. Defaults to "webup-project".
+    Returns:
+        Optional[PullRequest]: The pull request with the given number, or None if it does not exist.
+    """
+
+    url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{number}"
+    headers = {
+        "Accept": "application/vnd.github.v3+json",
+        "Authorization": f"token {GITHUB_TOKEN}",
+    }
+
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        return PullRequest.model_validate(response.json())
+    elif response.status_code == 404:
+        return None
+    else:
+        raise Exception(f"Error: {response.status_code} - {response.text}")
 
 
 def get_pull_requests_by_commit(
@@ -220,11 +261,6 @@ def __is_pull_request_match_filter(
         if pull_request_filter.body is None
         else __extract_only_useful_information(pull_request_filter.body)
     )
-    if (
-        pull_request_filter.number is not None
-        and pull_request.number != pull_request_filter.number
-    ):
-        return PullRequestMatched(matched=False)
 
     if title_filter is not None and not any(
         word.upper() in title.upper() for word in title_filter.split()
@@ -345,6 +381,8 @@ def get_pull_requests_by_commit(
         if response.status_code == 200:
             nextUrl = response.links.get("next", {}).get("url")
             pull_requests += [PullRequest.model_validate(pr) for pr in response.json()]
+        elif response.status_code == 422:
+            return []
         else:
             raise Exception(f"Error: {response.status_code} - {response.text}")
     return pull_requests

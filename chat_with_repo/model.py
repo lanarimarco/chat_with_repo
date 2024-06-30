@@ -94,7 +94,6 @@ class PullRequestFilter(BaseModel):
     Represents a filter for querying pull requests.
 
     Attributes:
-        number (Optional[int]): The pull request number.
         title (Optional[str]): The pull request title.
         body (Optional[str]): The pull request body.
         opened_from_branch (Optional[str]): The branch from which the pull request was opened.
@@ -102,7 +101,6 @@ class PullRequestFilter(BaseModel):
         state (PullRequestState): The state of the pull request. Defaults to PullRequestState.ALL.
     """
 
-    number: Optional[int] = None
     title: Optional[str] = None
     body: Optional[str] = None
     opened_from_branch: Optional[str] = None

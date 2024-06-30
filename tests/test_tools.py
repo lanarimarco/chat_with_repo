@@ -4,6 +4,7 @@ from chat_with_repo.commit_tools import (
     get_commits_by_pull_request,
 )
 from chat_with_repo.pull_request_tools import (
+    get_pull_request_by_number,
     get_pull_requests,
     get_pull_requests_by_commit,
     get_pull_requests_by_path,
@@ -73,6 +74,21 @@ def test_get_pull_requests_opened_from_branch():
 
     assert len(pull_requests) == 1
     assert pull_requests[0].number == 534
+
+
+def test_get_pull_requests_by_number():
+    owner = "smeup"
+    repo = "webup-project"
+    pull_request = get_pull_request_by_number(number=7327, owner=owner, repo=repo)
+
+    assert pull_request.number == 7327
+
+def test_get_pull_requests_by_number_none():
+    owner = "smeup"
+    repo = "webup-project"
+    pull_request = get_pull_request_by_number(number=0, owner=owner, repo=repo)
+
+    assert pull_request is None
 
 
 def test_get_pull_requests_by_title():
@@ -177,6 +193,15 @@ def test_get_pull_requests_by_commit():
 
     assert len(pull_requests) == 1
     assert pull_requests[0].number == 4
+
+    # Test case 2: Verify that if I pass a commit SHA that is not in any pull request, an empty list is returned
+    commit_sha = "a16d6cd1dd3b95d7717ac48af18e65e56235ba08"
+
+    pull_requests: List[PullRequest] = get_pull_requests_by_commit(
+        commit_sha=commit_sha, owner=owner, repo=repo
+    )
+
+    assert len(pull_requests) == 0
 
 
 def test_get_commits_by_path():
