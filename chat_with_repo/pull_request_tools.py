@@ -4,27 +4,26 @@ from langchain_core.tools import BaseTool
 
 from typing import Callable, List, Tuple, Type
 
-from pydantic import BaseModel
 import requests
 
 from chat_with_repo import GITHUB_TOKEN
-from chat_with_repo.assistant.commit_tools import get_commits_by_path
+from chat_with_repo.commit_tools import get_commits_by_path
 from chat_with_repo.model import PullRequest, PullRequestState, PullRequestFilter
 
 
-class GetPullRequestByCommitShema(BaseModel):
+class GetPullRequestsByCommitShema(BaseModel):
     commit_sha: str = Field(..., description="The SHA of the commit.")
 
 
-class GetPullRequestByCommitTool(BaseTool):
+class GetPullRequestsByCommitTool(BaseTool):
     owner: str
     repo: str
     topK: int = 10
-    args_schema: Type[BaseModel] = GetPullRequestByCommitShema
+    args_schema: Type[BaseModel] = GetPullRequestsByCommitShema
     name: str = "get_pull_requests_by_commit"
     description = "Retrieves a list of pull requests associated with a specific commit."
 
-    def _run(self, commit_sha: str):
+    def _run(self, commit_sha: str) -> List[PullRequest]:
         return get_pull_requests_by_commit(
             commit_sha=commit_sha, owner=self.owner, repo=self.repo
         )[: self.topK]
@@ -42,10 +41,28 @@ class GetPullRequestByPathTool(BaseTool):
     name: str = "get_pull_requests_by_path"
     description = "Retrieves a list of pull requests associated with a specific file."
 
-    def _run(self, path: str):
+    def _run(self, path: str) -> List[PullRequest]:
         return get_pull_requests_by_path(path=path, owner=self.owner, repo=self.repo)[
             : self.topK
         ]
+
+
+class GetPullRequestsByCommitShema(BaseModel):
+    commit_sha: str = Field(..., description="The SHA of the commit.")
+
+
+class GetPullRequestsByCommitTool(BaseTool):
+    owner: str
+    repo: str
+    topK: int = 10
+    args_schema: Type[BaseModel] = GetPullRequestsByCommitShema
+    name: str = "get_pull_requests_by_commit"
+    description = "Retrieves a list of pull requests associated with a specific commit."
+
+    def _run(self, commit_sha: str) -> List[PullRequest]:
+        return get_pull_requests_by_commit(
+            commit_sha=commit_sha, owner=self.owner, repo=self.repo
+        )[: self.topK]
 
 
 class GetPullRequestsSchema(BaseModel):
@@ -81,7 +98,7 @@ class GetPullRequestsTool(BaseTool):
         opened_from_branch: str = None,
         target_branch: str = "develop",
         state: PullRequestState = PullRequestState.ALL,
-    ):
+    ) -> List[PullRequest]:
         return get_pull_requests(
             PullRequestFilter(
                 number=number,
@@ -296,6 +313,41 @@ def __get_pull_requests(
             raise Exception(f"Error: {response.status_code} - {response.text}")
     pull_requests_with_matched_chars.sort(key=lambda x: x[1], reverse=True)
     return [pr[0] for pr in pull_requests_with_matched_chars]
+
+
+def get_pull_requests_by_commit(
+    commit_sha: str, owner: str = "smeup", repo: str = "jariko"
+) -> List[PullRequest]:
+    """
+    Retrieves the pull requests associated with a given commit SHA.
+
+    Args:
+        commit_sha (str): The SHA of the commit.
+        owner (str, optional): The owner of the repository. Defaults to "smeup".
+        repo (str, optional): The name of the repository. Defaults to "jariko".
+
+    Returns:
+        List[PullRequest]: A list of PullRequest objects representing the retrieved pull requests.
+    """
+    url = f"https://api.github.com/repos/{owner}/{repo}/commits/{commit_sha}/pulls"
+    headers = {
+        "Accept": "application/vnd.github.groot-preview+json",  # Required for this API
+        "Authorization": f"token {GITHUB_TOKEN}",
+    }
+    params = {
+        "per_page": 100,
+    }
+
+    nextUrl = url
+    pull_requests = []
+    while nextUrl:
+        response = requests.get(url, headers=headers, params=params)
+        if response.status_code == 200:
+            nextUrl = response.links.get("next", {}).get("url")
+            pull_requests += [PullRequest.model_validate(pr) for pr in response.json()]
+        else:
+            raise Exception(f"Error: {response.status_code} - {response.text}")
+    return pull_requests
 
 
 def __extract_only_useful_information(text: str) -> str:

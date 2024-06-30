@@ -1,5 +1,5 @@
 import streamlit as st
-from chat_with_repo.assistant.assistant import GitHubAssistant
+from chat_with_repo.assistant import GitHubAssistant
 from enum import Enum
 
 
@@ -16,7 +16,10 @@ class Role(Enum):
 
 
 def main():
-    st.title("Chat with Jariko")
+
+    global repo
+
+    st.title("Chat with smeup repo")
 
     # Initialize chat history
     if "messages" not in st.session_state:
@@ -24,31 +27,39 @@ def main():
     if "assistant" not in st.session_state:
         st.session_state.assistant = GitHubAssistant()
 
-    # Display chat messages from history on app rerun
+
+
+    repo = st.session_state.assistant.state.repo
+
+    assistant: GitHubAssistant = st.session_state.assistant
+
+
+    # # Display chat messages from history on app rerun
+    # for message in st.session_state.messages:
+    #     if message["role"] == Role.USER.value:
+    #         with st.chat_message(Role.USER.value, avatar=Role.USER.avatar):
+    #             st.markdown(message["content"])
+    #     else:
+    #         with st.chat_message(Role.ASSISTANT.value, avatar=Role.ASSISTANT.avatar):
+    #             st.markdown(message["content"])
     for message in st.session_state.messages:
-        if message["role"] == Role.USER.value:
-            with st.chat_message(Role.USER.value, avatar=Role.USER.avatar):
-                st.markdown(message["content"])
-        else:
-            with st.chat_message(Role.ASSISTANT.value, avatar=Role.ASSISTANT.avatar):
-                st.markdown(message["content"])
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
 
     # React to user input
     if prompt := st.chat_input("Hello, how can I help you?"):
         # Display user message in chat message container
-        with st.chat_message(Role.USER.value, avatar=Role.USER.avatar):
+        with st.chat_message(Role.USER.value):
             st.markdown(prompt)
         # Add user message to chat history
         st.session_state.messages.append({"role": Role.USER.value, "content": prompt})
 
         response = st.session_state.assistant.chat(prompt)
         # Display assistant response in chat message container
-        with st.chat_message(name=Role.ASSISTANT.value, avatar=Role.ASSISTANT.avatar):
+        with st.chat_message(name=assistant.state.repo):
             st.markdown(response)
         # Add assistant response to chat history
-        st.session_state.messages.append(
-            {"role": Role.ASSISTANT.value, "content": response}
-        )
+        st.session_state.messages.append({"role": repo, "content": response})
 
 
 def process_message(message):
