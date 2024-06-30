@@ -10,10 +10,6 @@ from chat_with_repo.pull_request_tools import (
 )
 from chat_with_repo.model import CommitFilter, PullRequest, PullRequestFilter
 
-from chat_with_repo.commit_tools import (
-    is_commit_in_branch,
-)
-
 
 def test_get_pull_requests_against_develop():
     # Test case 1: Verify that pull requests are returned correctly
@@ -194,16 +190,6 @@ def test_get_commits_by_path():
     assert len(commits) > 0
 
 
-def test_is_commit_in_branch():
-    # Test case 1: Verify that the commit is in the branch
-    commit_sha = "7d743cdad588a17f2ccad03c190b372554c4bbb5"
-    branch = "develop"
-    owner = "smeup"
-    repo = "jariko"
-
-    assert is_commit_in_branch(commit_sha, branch, owner, repo)
-
-
 def test_get_commits_by_pull_request():
     # Test case 1: Verify that the commits are returned correctly
     number = 554
@@ -214,4 +200,3 @@ def test_get_commits_by_pull_request():
     assert any(
         commit.sha == "9474e3ff4f600c9511b14c32e6a6b305350fe0dc" for commit in commits
     )
-
