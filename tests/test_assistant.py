@@ -55,6 +55,7 @@ def test_get_pull_requests_by_title():
     response = assistant.chat(message)
     assert "549" in response
 
+
 def test_get_pull_requests_by_commit():
     assistant = GitHubAssistant()
     message = """
@@ -92,6 +93,7 @@ def test_chat_about_pull_request():
     assert "June" in response and "12" in response and "2024" in response
     pass
 
+
 def test_get_commits_by_path():
     assistant = GitHubAssistant()
     message = """
@@ -100,13 +102,24 @@ def test_get_commits_by_path():
     response = assistant.chat(message)
     assert "4310307181d9a66dc330db9206602601361943b" in response
 
-def test_is_commit_in_branch():
+
+def test_is_commit_in_branch_develop():
     assistant = GitHubAssistant()
     message = """
-        Hello, tell me if the commit 7d743cdad588a17f2ccad03c190b372554c4bbb5 is in the branch develop
+        Hello, tell me if the commit 67477d15d599cad9d7bca0df49cc383984d85125 is in the develop or master. Answer YES or NO followed by the explanation
     """
     response = assistant.chat(message)
     assert "YES" in response.upper()
+
+
+def test_is_commit_in_branch_master():
+    assistant = GitHubAssistant()
+    message = """
+        Hello, tell me if the commit 8d189c51b3ff056aa019c26e93f59e8a603e7735 is in the branch master. Answer YES or NO followed by the explanation
+    """
+    response = assistant.chat(message)
+    assert "YES" in response.upper()
+
 
 def test_get_commits_by_pull_request():
     assistant = GitHubAssistant()

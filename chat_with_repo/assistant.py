@@ -3,7 +3,6 @@ from chat_with_repo import OPENAI_API_KEY
 from chat_with_repo.commit_tools import (
     GetCommitsByPathTool,
     GetCommitsByPullRequestTool,
-    IsCommitInBranchTool,
 )
 from chat_with_repo.misc_tools import SelectGitHubRepoTool
 from chat_with_repo.model import State
@@ -101,7 +100,6 @@ class GitHubAssistant:
                 GetCommitsByPullRequestTool(
                     repo=self.state.repo, owner=self.state.owner, topK=self.topK
                 ),
-                IsCommitInBranchTool(repo=self.state.repo, owner=self.state.owner),
             ]
         agent = create_openai_tools_agent(llm, tools, self.prompt)
         agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
