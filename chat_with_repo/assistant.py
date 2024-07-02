@@ -7,6 +7,7 @@ from chat_with_repo.commit_tools import (
 from chat_with_repo.misc_tools import SelectGitHubRepoTool
 from chat_with_repo.model import State
 from chat_with_repo.pull_request_tools import (
+    GetPullRequestByNumberTool,
     GetPullRequestsByCommitTool,
     GetPullRequestByPathTool,
 )
@@ -55,7 +56,7 @@ class GitHubAssistant:
         self.model = model
         self.chat_history = deque(maxlen=chat_history_length)
         self.topK = topK
-        self.state = State(owner=owner, repo=repo)
+        self.state = State()
         self.on_change_repo = on_change_repo
 
     system = """
@@ -85,21 +86,12 @@ class GitHubAssistant:
         else:
             tools = [
                 SelectGitHubRepoTool(state=self.state),
-                GetPullRequestsTool(
-                    repo=self.state.repo, owner=self.state.owner, topK=self.topK
-                ),
-                GetPullRequestsByCommitTool(
-                    repo=self.state.repo, owner=self.state.owner, topK=self.topK
-                ),
-                GetPullRequestByPathTool(
-                    repo=self.state.repo, owner=self.state.owner, topK=self.topK
-                ),
-                GetCommitsByPathTool(
-                    repo=self.state.repo, owner=self.state.owner, topK=self.topK
-                ),
-                GetCommitsByPullRequestTool(
-                    repo=self.state.repo, owner=self.state.owner, topK=self.topK
-                ),
+                GetPullRequestByNumberTool(state=self.state, topK=self.topK),
+                GetPullRequestsTool(state=self.state, topK=self.topK),
+                GetPullRequestsByCommitTool(state=self.state, topK=self.topK),
+                GetPullRequestByPathTool(state=self.state, topK=self.topK),
+                GetCommitsByPathTool(state=self.state, topK=self.topK),
+                GetCommitsByPullRequestTool(state=self.state, topK=self.topK),
             ]
         agent = create_openai_tools_agent(llm, tools, self.prompt)
         agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)

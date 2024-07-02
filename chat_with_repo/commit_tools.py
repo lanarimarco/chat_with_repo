@@ -1,7 +1,7 @@
 from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_core.tools import BaseTool
 from chat_with_repo import GITHUB_TOKEN
-from chat_with_repo.model import Commit, CommitFilter
+from chat_with_repo.model import Commit, CommitFilter, Repo, State
 
 
 import requests
@@ -15,15 +15,14 @@ class GetCommitsByPathSchema(BaseModel):
 
 
 class GetCommitsByPathTool(BaseTool):
-    owner: str
-    repo: str
+    state: State
     topK: int = 10
     args_schema: Type[BaseModel] = GetCommitsByPathSchema
     name: str = "get_commits_by_path"
     description = "Retrieves a list of commits associated with a specific file."
 
     def _run(self, path: str) -> List[Commit]:
-        return get_commits_by_path(path=path, owner=self.owner, repo=self.repo)[
+        return get_commits_by_path(path=path, owner=self.state.repo.owner, repo=self.state.repo.value)[
             : self.topK
         ]
 
@@ -33,8 +32,7 @@ class GetCommitsByPullRequestSchema(BaseModel):
 
 
 class GetCommitsByPullRequestTool(BaseTool):
-    owner: str
-    repo: str
+    state: State
     topK: int = 10
     args_schema: Type[BaseModel] = GetCommitsByPullRequestSchema
     name: str = "get_commits_by_pull_request"
@@ -42,7 +40,7 @@ class GetCommitsByPullRequestTool(BaseTool):
 
     def _run(self, number: int) -> List[Commit]:
         return get_commits_by_pull_request(
-            number=number, owner=self.owner, repo=self.repo
+            number=number, owner=self.state.repo.owner, repo=self.state.repo.value
         )[: self.topK]
 
 

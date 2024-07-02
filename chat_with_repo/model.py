@@ -4,21 +4,37 @@ from pydantic import BaseModel
 from enum import Enum
 
 
+class Repo(Enum):
+
+    jariko = "jariko"
+    kokos_sdk_java_rpgle = "kokos-sdk-java-rpgle"
+    webup_project = "webup-project"
+    webup_js = "webup.js"
+    jardis = "jardis"
+    chat_with_repo = "chat_with_repo"
+
+    @property
+    def owner(self):
+        if self == Repo.chat_with_repo:
+            return "lanarmarco"
+        else:
+            return "smeup"
+
+
 class State:
-    def __init__(self, owner="smeup", repo="jariko"):
-        self.owner = owner
-        self._repo = repo
-        self.on_change_repo: Callable[[str], None] = None
+    def __init__(self, repo: Repo = Repo.jariko):
+        self._repo: Repo = repo
+        self.on_change_repo: Callable[[Repo], None] = None
 
     def is_repo_selected(self):
-        return self.owner is not None and self.repo is not None
-    
+        return self.repo is not None
+
     @property
-    def repo(self):
+    def repo(self) -> Repo:
         return self._repo
 
     @repo.setter
-    def repo(self, value):
+    def repo(self, value: Repo):
         changed = self._repo != value
         self._repo = value
         if changed and self.on_change_repo is not None:

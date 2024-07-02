@@ -8,7 +8,7 @@ import requests
 
 from chat_with_repo import GITHUB_TOKEN
 from chat_with_repo.commit_tools import get_commits_by_path
-from chat_with_repo.model import PullRequest, PullRequestState, PullRequestFilter
+from chat_with_repo.model import PullRequest, PullRequestState, PullRequestFilter, Repo, State
 
 
 class GetPullRequestByNumberSchema(BaseModel):
@@ -16,15 +16,14 @@ class GetPullRequestByNumberSchema(BaseModel):
 
 
 class GetPullRequestByNumberTool(BaseTool):
-    owner: str
-    repo: str
+    state: State
     args_schema: Type[BaseModel] = GetPullRequestByNumberSchema
     name: str = "get_pull_request_by_number"
     description = "Retrieves a pull request by its number."
 
     def _run(self, number: int) -> Optional[PullRequest]:
         return get_pull_request_by_number(
-            number=number, owner=self.owner, repo=self.repo
+            number=number, owner=self.state.repo.owner, repo=self.state.repo.value
         )
 
 
@@ -33,8 +32,7 @@ class GetPullRequestsByCommitShema(BaseModel):
 
 
 class GetPullRequestsByCommitTool(BaseTool):
-    owner: str
-    repo: str
+    state: State
     topK: int = 10
     args_schema: Type[BaseModel] = GetPullRequestsByCommitShema
     name: str = "get_pull_requests_by_commit"
@@ -42,7 +40,7 @@ class GetPullRequestsByCommitTool(BaseTool):
 
     def _run(self, commit_sha: str) -> List[PullRequest]:
         return get_pull_requests_by_commit(
-            commit_sha=commit_sha, owner=self.owner, repo=self.repo
+            commit_sha=commit_sha, owner=self.state.repo.owner, repo=self.state.repo.value
         )[: self.topK]
 
 
@@ -51,15 +49,14 @@ class GetPullRequestByPathSchema(BaseModel):
 
 
 class GetPullRequestByPathTool(BaseTool):
-    owner: str
-    repo: str
+    state: State
     topK: int = 10
     args_schema: Type[BaseModel] = GetPullRequestByPathSchema
     name: str = "get_pull_requests_by_path"
     description = "Retrieves a list of pull requests associated with a specific file."
 
     def _run(self, path: str) -> List[PullRequest]:
-        return get_pull_requests_by_path(path=path, owner=self.owner, repo=self.repo)[
+        return get_pull_requests_by_path(path=path, owner=self.state.repo.owner, repo=self.state.repo.value)[
             : self.topK
         ]
 
@@ -69,8 +66,7 @@ class GetPullRequestsByCommitShema(BaseModel):
 
 
 class GetPullRequestsByCommitTool(BaseTool):
-    owner: str
-    repo: str
+    state: State
     topK: int = 10
     args_schema: Type[BaseModel] = GetPullRequestsByCommitShema
     name: str = "get_pull_requests_by_commit"
@@ -78,7 +74,7 @@ class GetPullRequestsByCommitTool(BaseTool):
 
     def _run(self, commit_sha: str) -> List[PullRequest]:
         return get_pull_requests_by_commit(
-            commit_sha=commit_sha, owner=self.owner, repo=self.repo
+            commit_sha=commit_sha, owner=self.state.repo.owner, repo=self.state.repo.value
         )[: self.topK]
 
 
@@ -99,8 +95,7 @@ class GetPullRequestsSchema(BaseModel):
 
 
 class GetPullRequestsTool(BaseTool):
-    owner: str
-    repo: str
+    state: State
     topK: int = 10
     args_schema: Type[BaseModel] = GetPullRequestsSchema
     name: str = "get_pull_requests"
@@ -122,8 +117,8 @@ class GetPullRequestsTool(BaseTool):
                 target_branch=target_branch,
                 state=state,
             ),
-            owner=self.owner,
-            repo=self.repo,
+            owner=self.state.repo.owner,
+            repo=self.state.repo.value,
         )[: self.topK]
 
 
