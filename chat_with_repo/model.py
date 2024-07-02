@@ -63,6 +63,7 @@ class PullRequest(BaseModel):
     merged_at: Optional[datetime] = None
     closed_at: Optional[datetime] = None
     head: Head
+    base: Head
 
 
 class Author(BaseModel):
