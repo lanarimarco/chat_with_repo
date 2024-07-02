@@ -376,7 +376,7 @@ def get_pull_requests_by_commit(
         if response.status_code == 200:
             nextUrl = response.links.get("next", {}).get("url")
             pull_requests += [PullRequest.model_validate(pr) for pr in response.json()]
-        elif response.status_code == 422:
+        elif response.status_code == 422 or response.status_code == 404:
             return []
         else:
             raise Exception(f"Error: {response.status_code} - {response.text}")
