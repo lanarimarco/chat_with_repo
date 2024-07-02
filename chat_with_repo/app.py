@@ -17,8 +17,6 @@ class Role(Enum):
 
 def main():
 
-    global repo
-
     st.title("Chat with smeup repo")
 
     # Initialize chat history
@@ -26,10 +24,6 @@ def main():
         st.session_state.messages = []
     if "assistant" not in st.session_state:
         st.session_state.assistant = GitHubAssistant()
-
-
-
-    repo = st.session_state.assistant.state.repo
 
     assistant: GitHubAssistant = st.session_state.assistant
 
@@ -56,10 +50,10 @@ def main():
 
         response = st.session_state.assistant.chat(prompt)
         # Display assistant response in chat message container
-        with st.chat_message(name=assistant.state.repo):
+        with st.chat_message(name=assistant.state.repo.value):
             st.markdown(response)
         # Add assistant response to chat history
-        st.session_state.messages.append({"role": repo, "content": response})
+        st.session_state.messages.append({"role": assistant.state.repo.value, "content": response})
 
 
 def process_message(message):
