@@ -19,6 +19,10 @@ class Repo(Enum):
             return "lanarmarco"
         else:
             return "smeup"
+    
+    @staticmethod
+    def to_str(): 
+        return ', '.join([member.value for member in Repo])
 
 
 class State:
