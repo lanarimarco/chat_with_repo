@@ -22,9 +22,9 @@ class GetCommitsByPathTool(BaseTool):
     description = "Retrieves a list of commits associated with a specific file."
 
     def _run(self, path: str) -> List[Commit]:
-        return get_commits_by_path(path=path, owner=self.state.repo.owner, repo=self.state.repo.value)[
-            : self.topK
-        ]
+        return get_commits_by_path(
+            path=path, owner=self.state.repo.owner, repo=self.state.repo.value
+        )[: self.topK]
 
 
 class GetCommitsByPullRequestSchema(BaseModel):
@@ -99,6 +99,45 @@ def get_commits_by_pull_request(
         return [Commit.model_validate(commit) for commit in response.json()]
     else:
         raise Exception(f"Error: {response.status_code} - {response.text}")
+
+
+# https://docs.github.com/rest/commits/commits#compare-two-commits
+def compare_commits(
+    base: str, head: str, owner: str = "smeup", repo: str = "jariko"
+) -> List[Commit]:
+    """
+    Retrieves the difference between two commits.
+
+    Args:
+        base (str): The base commit. Hash, tag or branch name.
+        head (str): The head commit. Hash, tag or branch name.
+        owner (str, optional): The owner of the repository. Defaults to "smeup".
+        repo (str, optional): The name of the repository. Defaults to "jariko".
+
+    Returns:
+        List[Commit]: A list of Commit representing the retrieved commits.
+    """
+    url = f"https://api.github.com/repos/{owner}/{repo}/compare/{base}...{head}"
+    headers = {
+        "Accept": "application/vnd.github.v3+json",
+        "Authorization": f"token {GITHUB_TOKEN}",
+    }
+    params = {
+        "per_page": 100,
+    }
+
+    nextUrl = url
+    commits = []
+    while nextUrl:
+        response = requests.get(nextUrl, headers=headers, params=params)
+        if response.status_code == 200:
+            nextUrl = response.links.get("next", {}).get("url")
+            # Process the commits as needed
+            for commit in response.json()["commits"]:
+                commits.append(Commit.model_validate(commit))
+        else:
+            raise Exception(f"Error: {response.status_code} - {response.text}")
+    return commits
 
 
 def __get_commits(
