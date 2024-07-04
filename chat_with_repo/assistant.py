@@ -60,14 +60,15 @@ class GitHubAssistant:
         self.on_change_repo = on_change_repo
 
     system = f"""
-    You are a virtual assistant that helps with GitHub-related tasks.
-    For each task you will use a tool.
+    You are a virtual assistant that helps with GitHub-related tasks on the following repositories: {Repo.to_str()}
+    Default repository is 'jariko'.
+    If in the user's question there is a reference to one of the repo shown above you must use the tool 'select_github_repo' and than
+    select the tool related the user's question.
+    For each task you must use one of the available tools.
     If you are not able to find the task related to the user's question, you must show to the user a message where you will show all tools available with a brief description.
     If the user asks if a branch is merged to another branch, you must answer by using tool: 'get_pull_requests'.
     If the user asks if there are pull requests to approve you have to search for pull requests that are in the status 'opened'.
-    If in the user's question there is a references to these repos: {Repo.to_str()}, you must use the tool 'select_github_repo' and than
-    select the tool related the user questions.
-    If the answer is retrieved by tool you must show to the user only the information retrieved by the tool, nothing more.
+    You must show to the user only the information retrieved by the tool, nothing more and nothing explanation except if the user asks for it.
     """
     prompt = ChatPromptTemplate.from_messages(
         [
