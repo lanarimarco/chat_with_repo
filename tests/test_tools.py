@@ -245,6 +245,16 @@ def test_compare_commits():
     assert commits[0].sha == "ed090f8f507b462165c608cad15c4852bcd9b9f2"
     assert commits[0].commit.author.email == "davide.palladino@apuliasoft.com"
 
+    # Test case 2: If base or head are not valid commit SHAs, an empty list is returned
+    base = "foo"
+    head = "ed090f8f507b462165c608cad15c4852bcd9b9f2"
+
+    commits: List[Commit] = compare_commits(
+        base=base, head=head, owner=owner, repo=repo
+    )
+
+    assert len(commits) == 0
+
 
 def test_is_commit_in_branch():
     # Test case 1: Verify that the commit is in the develop branch

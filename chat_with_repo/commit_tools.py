@@ -155,6 +155,8 @@ def compare_commits(
             # Process the commits as needed
             for commit in response.json()["commits"]:
                 commits.append(Commit.model_validate(commit))
+        elif response.status_code == 404:
+            return []
         else:
             raise Exception(f"Error: {response.status_code} - {response.text}")
     return commits
