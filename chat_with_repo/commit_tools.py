@@ -7,7 +7,7 @@ from chat_with_repo.model import Commit, CommitFilter, Repo, State
 import requests
 
 
-from typing import Callable, List, Type
+from typing import Callable, List, Optional, Type
 
 
 class GetCommitsByPathSchema(BaseModel):
@@ -124,7 +124,7 @@ def get_commits_by_pull_request(
 # https://docs.github.com/rest/commits/commits#compare-two-commits
 def compare_commits(
     base: str, head: str, owner: str = "smeup", repo: str = "jariko"
-) -> List[Commit]:
+) -> Optional[List[Commit]]:
     """
     Retrieves the difference between two commits.
 
@@ -135,7 +135,8 @@ def compare_commits(
         repo (str, optional): The name of the repository. Defaults to "jariko".
 
     Returns:
-        List[Commit]: A list of Commit representing the retrieved commits.
+        List[Commit]: A list of Commit representing the retrieved commits. If the base commit or the head commit does not exist,
+        it returns None.
     """
     url = f"https://api.github.com/repos/{owner}/{repo}/compare/{base}...{head}"
     headers = {
@@ -156,7 +157,7 @@ def compare_commits(
             for commit in response.json()["commits"]:
                 commits.append(Commit.model_validate(commit))
         elif response.status_code == 404:
-            return []
+            return None
         else:
             raise Exception(f"Error: {response.status_code} - {response.text}")
     return commits
@@ -178,6 +179,8 @@ def is_commit_in_branch(
         bool: True if the commit is in the branch, False otherwise.
     """
     commits = compare_commits(base=branch, head=commit_sha, owner=owner, repo=repo)
+    if commits is None:
+        return False
     return not any(commit.sha == commit_sha for commit in commits)
 
 
