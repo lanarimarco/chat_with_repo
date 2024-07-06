@@ -1,8 +1,10 @@
 from typing import Callable
 from chat_with_repo import OPENAI_API_KEY
 from chat_with_repo.commit_tools import (
+    GetCommitByShaTool,
     GetCommitsByPathTool,
     GetCommitsByPullRequestTool,
+    GetMergingCommitTool,
     IsCommitInBranchTool,
 )
 from chat_with_repo.misc_tools import SelectGitHubRepoTool
@@ -95,9 +97,14 @@ class GitHubAssistant:
                 GetPullRequestsTool(state=self.state, topK=self.topK),
                 GetPullRequestsByCommitTool(state=self.state, topK=self.topK),
                 GetPullRequestByPathTool(state=self.state, topK=self.topK),
+                GetCommitByShaTool(state=self.state),
                 IsCommitInBranchTool(state=self.state),
                 GetCommitsByPathTool(state=self.state, topK=self.topK),
                 GetCommitsByPullRequestTool(state=self.state, topK=self.topK),
+                # Commented because it was implemented in order to retrieve
+                # when a given commit was merged into a branch but it does not
+                # work as expected
+                GetMergingCommitTool(state=self.state),
             ]
         agent = create_openai_tools_agent(llm, tools, self.prompt)
         agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)

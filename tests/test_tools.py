@@ -1,8 +1,10 @@
 from typing import List
 from chat_with_repo.commit_tools import (
     compare_commits,
+    get_commit_by_sha,
     get_commits_by_path,
     get_commits_by_pull_request,
+    get_merging_commit,
     is_commit_in_branch,
 )
 from chat_with_repo.pull_request_tools import (
@@ -276,9 +278,50 @@ def test_is_commit_in_branch():
         commit_sha=commit_sha, branch=branch, owner=owner, repo=repo
     )
 
-     # Test case 3: If I specify a foo branch, the function should return False
+    # Test case 3: If I specify a foo branch, the function should return False
     branch = "foo"
 
-    assert is_commit_in_branch(
+    assert (
+        is_commit_in_branch(
+            commit_sha=commit_sha, branch=branch, owner=owner, repo=repo
+        )
+        == False
+    )
+
+
+def test_get_commit_by_sha():
+    owner = "smeup"
+    repo = "jariko"
+    commit_sha = "5615e2956bd986d71225498ed1a571ef861f734f"
+    commit = get_commit_by_sha(commit_sha=commit_sha, owner=owner, repo=repo)
+    assert commit.commit.author.email == "domenico.mancini@apuliasoft.com"
+
+
+def test_get_commit_by_sha_not_found():
+    owner = "smeup"
+    repo = "jariko"
+    commit_sha = "foo"
+    commit = get_commit_by_sha(commit_sha=commit_sha, owner=owner, repo=repo)
+    assert commit is None
+
+
+def test_merging_commit():
+    owner = "smeup"
+    repo = "jariko"
+    branch = "develop"
+    commit_sha = "454177945f2cbd33cf859dc54abd4da92eb3c1a5"
+    commit: Commit = get_merging_commit(
         commit_sha=commit_sha, branch=branch, owner=owner, repo=repo
-    ) == False
+    )
+    assert commit.commit.author.email == "40103274+lanarimarco@users.noreply.github.com"
+
+
+def test_merging_commit_not_found():
+    owner = "smeup"
+    repo = "jariko"
+    branch = "foo"
+    commit_sha = "454177945f2cbd33cf859dc54abd4da92eb3c1a5"
+    commit: Commit = get_merging_commit(
+        commit_sha=commit_sha, branch=branch, owner=owner, repo=repo
+    )
+    assert commit is None

@@ -137,3 +137,19 @@ def test_is_commit_in_branch():
     """
     response = assistant.chat(message)
     assert "YES" in response.upper()
+
+def test_get_commit_by_sha():
+    assistant = GitHubAssistant()
+    message = """
+        Hello, tell me the email of the author of the commit 5615e2956bd986d71225498ed1a571ef861f734f
+    """
+    response = assistant.chat(message)
+    assert "domenico.mancini@apuliasoft.com" in response
+
+def test_get_merging_commit():
+    assistant = GitHubAssistant()
+    message = """
+        Hello tell who has merged in the develop this commit 5615e2956bd986d71225498ed1a571ef861f734f
+    """
+    response = assistant.chat(message)
+    assert "Marco Lanari" in response
