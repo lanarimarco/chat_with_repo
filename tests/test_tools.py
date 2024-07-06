@@ -3,6 +3,7 @@ from chat_with_repo.commit_tools import (
     compare_commits,
     get_commits_by_path,
     get_commits_by_pull_request,
+    is_commit_in_branch,
 )
 from chat_with_repo.pull_request_tools import (
     get_pull_request_by_number,
@@ -243,3 +244,24 @@ def test_compare_commits():
     assert len(commits) == 1
     assert commits[0].sha == "ed090f8f507b462165c608cad15c4852bcd9b9f2"
     assert commits[0].commit.author.email == "davide.palladino@apuliasoft.com"
+
+
+def test_is_commit_in_branch():
+    # Test case 1: Verify that the commit is in the develop branch
+    owner = "smeup"
+    repo = "jariko"
+    commit_sha = "cf4dd0747e305d67071587ee25a06e14551f2f76"
+
+    # Test case 1: Verify that the commit is in the develop branch
+    branch = "develop"
+
+    assert is_commit_in_branch(
+        commit_sha=commit_sha, branch=branch, owner=owner, repo=repo
+    )
+
+    # Test case 1: Verify that the commit is in the master branch
+    branch = "master"
+
+    assert is_commit_in_branch(
+        commit_sha=commit_sha, branch=branch, owner=owner, repo=repo
+    )

@@ -140,6 +140,25 @@ def compare_commits(
     return commits
 
 
+def is_commit_in_branch(
+    commit_sha: str, branch: str, owner: str = "smeup", repo: str = "jariko"
+) -> bool:
+    """
+    Verifies if a commit is in a branch.
+
+    Args:
+        commit_sha (str): The commit SHA.
+        branch (str): The branch name.
+        owner (str, optional): The owner of the repository. Defaults to "smeup".
+        repo (str, optional): The name of the repository. Defaults to "jariko".
+
+    Returns:
+        bool: True if the commit is in the branch, False otherwise.
+    """
+    commits = compare_commits(base=branch, head=commit_sha, owner=owner, repo=repo)
+    return not any(commit.sha == commit_sha for commit in commits)
+
+
 def __get_commits(
     commit_filter: CommitFilter = CommitFilter(),
     owner: str = "smeup",
