@@ -44,6 +44,26 @@ class GetCommitsByPullRequestTool(BaseTool):
         )[: self.topK]
 
 
+class IsCommitInBranchSchema(BaseModel):
+    commit_sha: str = Field(..., description="The commit SHA.")
+    branch: str = Field(..., description="The branch name.")
+
+
+class IsCommitInBranchTool(BaseTool):
+    state: State
+    args_schema: Type[BaseModel] = IsCommitInBranchSchema
+    name: str = "is_commit_in_branch"
+    description = "Verifies if a commit is in a branch."
+
+    def _run(self, commit_sha: str, branch: str) -> bool:
+        return is_commit_in_branch(
+            commit_sha=commit_sha,
+            branch=branch,
+            owner=self.state.repo.owner,
+            repo=self.state.repo.value,
+        )
+
+
 def get_commits_by_path(
     path: str, owner: str = "smeup", repo: str = "jariko"
 ) -> List[Commit]:

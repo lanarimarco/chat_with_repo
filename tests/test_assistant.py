@@ -128,3 +128,12 @@ def test_get_commits_by_pull_request():
     """
     response = assistant.chat(message)
     assert "9474e3ff4f600c9511b14c32e6a6b305350fe0dc" in response
+
+
+def test_is_commit_in_branch():
+    assistant = GitHubAssistant()
+    message = """
+        Hello, tell me if the commit cf4dd0747e305d67071587ee25a06e14551f2f76 is in the branch master. Answer YES or NO
+    """
+    response = assistant.chat(message)
+    assert "YES" in response.upper()
