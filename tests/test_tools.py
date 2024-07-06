@@ -1,7 +1,9 @@
 from typing import List
 from chat_with_repo.commit_tools import (
+    compare_commits,
     get_commits_by_path,
     get_commits_by_pull_request,
+    is_commit_in_branch,
 )
 from chat_with_repo.pull_request_tools import (
     get_pull_request_by_number,
@@ -9,7 +11,7 @@ from chat_with_repo.pull_request_tools import (
     get_pull_requests_by_commit,
     get_pull_requests_by_path,
 )
-from chat_with_repo.model import CommitFilter, PullRequest, PullRequestFilter
+from chat_with_repo.model import Commit, CommitFilter, PullRequest, PullRequestFilter
 
 
 def test_get_pull_requests_against_develop():
@@ -82,6 +84,7 @@ def test_get_pull_requests_by_number():
     pull_request = get_pull_request_by_number(number=7327, owner=owner, repo=repo)
 
     assert pull_request.number == 7327
+
 
 def test_get_pull_requests_by_number_none():
     owner = "smeup"
@@ -225,3 +228,57 @@ def test_get_commits_by_pull_request():
     assert any(
         commit.sha == "9474e3ff4f600c9511b14c32e6a6b305350fe0dc" for commit in commits
     )
+
+
+def test_compare_commits():
+    # Test case 1: Verify that the commits are returned correctly
+    owner = "smeup"
+    repo = "jariko"
+    base = "214fe647824ebf369d9b99f5fcebdd84cd6c9b8a"
+    head = "ed090f8f507b462165c608cad15c4852bcd9b9f2"
+
+    commits: List[Commit] = compare_commits(
+        base=base, head=head, owner=owner, repo=repo
+    )
+
+    assert len(commits) == 1
+    assert commits[0].sha == "ed090f8f507b462165c608cad15c4852bcd9b9f2"
+    assert commits[0].commit.author.email == "davide.palladino@apuliasoft.com"
+
+    # Test case 2: If base or head are not valid commit SHAs, a None is returned
+    base = "foo"
+    head = "ed090f8f507b462165c608cad15c4852bcd9b9f2"
+
+    commits: List[Commit] = compare_commits(
+        base=base, head=head, owner=owner, repo=repo
+    )
+
+    assert commits is None
+
+
+def test_is_commit_in_branch():
+    # Test case 1: Verify that the commit is in the develop branch
+    owner = "smeup"
+    repo = "jariko"
+    commit_sha = "cf4dd0747e305d67071587ee25a06e14551f2f76"
+
+    # Test case 1: Verify that the commit is in the develop branch
+    branch = "develop"
+
+    assert is_commit_in_branch(
+        commit_sha=commit_sha, branch=branch, owner=owner, repo=repo
+    )
+
+    # Test case 2: Verify that the commit is in the master branch
+    branch = "master"
+
+    assert is_commit_in_branch(
+        commit_sha=commit_sha, branch=branch, owner=owner, repo=repo
+    )
+
+     # Test case 3: If I specify a foo branch, the function should return False
+    branch = "foo"
+
+    assert is_commit_in_branch(
+        commit_sha=commit_sha, branch=branch, owner=owner, repo=repo
+    ) == False

@@ -7,7 +7,7 @@ from chat_with_repo.model import Commit, CommitFilter, Repo, State
 import requests
 
 
-from typing import Callable, List, Type
+from typing import Callable, List, Optional, Type
 
 
 class GetCommitsByPathSchema(BaseModel):
@@ -22,9 +22,9 @@ class GetCommitsByPathTool(BaseTool):
     description = "Retrieves a list of commits associated with a specific file."
 
     def _run(self, path: str) -> List[Commit]:
-        return get_commits_by_path(path=path, owner=self.state.repo.owner, repo=self.state.repo.value)[
-            : self.topK
-        ]
+        return get_commits_by_path(
+            path=path, owner=self.state.repo.owner, repo=self.state.repo.value
+        )[: self.topK]
 
 
 class GetCommitsByPullRequestSchema(BaseModel):
@@ -42,6 +42,26 @@ class GetCommitsByPullRequestTool(BaseTool):
         return get_commits_by_pull_request(
             number=number, owner=self.state.repo.owner, repo=self.state.repo.value
         )[: self.topK]
+
+
+class IsCommitInBranchSchema(BaseModel):
+    commit_sha: str = Field(..., description="The commit SHA.")
+    branch: str = Field(..., description="The branch name.")
+
+
+class IsCommitInBranchTool(BaseTool):
+    state: State
+    args_schema: Type[BaseModel] = IsCommitInBranchSchema
+    name: str = "is_commit_in_branch"
+    description = "Verifies if a commit is in a branch."
+
+    def _run(self, commit_sha: str, branch: str) -> bool:
+        return is_commit_in_branch(
+            commit_sha=commit_sha,
+            branch=branch,
+            owner=self.state.repo.owner,
+            repo=self.state.repo.value,
+        )
 
 
 def get_commits_by_path(
@@ -99,6 +119,69 @@ def get_commits_by_pull_request(
         return [Commit.model_validate(commit) for commit in response.json()]
     else:
         raise Exception(f"Error: {response.status_code} - {response.text}")
+
+
+# https://docs.github.com/rest/commits/commits#compare-two-commits
+def compare_commits(
+    base: str, head: str, owner: str = "smeup", repo: str = "jariko"
+) -> Optional[List[Commit]]:
+    """
+    Retrieves the difference between two commits.
+
+    Args:
+        base (str): The base commit. Hash, tag or branch name.
+        head (str): The head commit. Hash, tag or branch name.
+        owner (str, optional): The owner of the repository. Defaults to "smeup".
+        repo (str, optional): The name of the repository. Defaults to "jariko".
+
+    Returns:
+        List[Commit]: A list of Commit representing the retrieved commits. If the base commit or the head commit does not exist,
+        it returns None.
+    """
+    url = f"https://api.github.com/repos/{owner}/{repo}/compare/{base}...{head}"
+    headers = {
+        "Accept": "application/vnd.github.v3+json",
+        "Authorization": f"token {GITHUB_TOKEN}",
+    }
+    params = {
+        "per_page": 100,
+    }
+
+    nextUrl = url
+    commits = []
+    while nextUrl:
+        response = requests.get(nextUrl, headers=headers, params=params)
+        if response.status_code == 200:
+            nextUrl = response.links.get("next", {}).get("url")
+            # Process the commits as needed
+            for commit in response.json()["commits"]:
+                commits.append(Commit.model_validate(commit))
+        elif response.status_code == 404:
+            return None
+        else:
+            raise Exception(f"Error: {response.status_code} - {response.text}")
+    return commits
+
+
+def is_commit_in_branch(
+    commit_sha: str, branch: str, owner: str = "smeup", repo: str = "jariko"
+) -> bool:
+    """
+    Verifies if a commit is in a branch.
+
+    Args:
+        commit_sha (str): The commit SHA.
+        branch (str): The branch name.
+        owner (str, optional): The owner of the repository. Defaults to "smeup".
+        repo (str, optional): The name of the repository. Defaults to "jariko".
+
+    Returns:
+        bool: True if the commit is in the branch, False otherwise.
+    """
+    commits = compare_commits(base=branch, head=commit_sha, owner=owner, repo=repo)
+    if commits is None:
+        return False
+    return not any(commit.sha == commit_sha for commit in commits)
 
 
 def __get_commits(

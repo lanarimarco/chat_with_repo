@@ -17,6 +17,6 @@ class SelectGitHubRepoTool(BaseTool):
 
     def _run(self, repo: Repo):
         self.state.repo = repo
-        return f"{repo.owner}/{repo.value} has been selected. Remember the user that he can change the repository any time and that since now he is able to ask any questions as specifed in system message"
+        return "Ok!"
     
     
