@@ -267,23 +267,35 @@ def test_is_commit_in_branch():
     commit_sha = "cf4dd0747e305d67071587ee25a06e14551f2f76"
 
     # Test case 1: Verify that the commit is in the develop branch
-    branch = "develop"
-
-    assert is_commit_in_base(commit_sha=commit_sha, base=branch, owner=owner, repo=repo)
+    base = "develop"
+    assert is_commit_in_base(commit_sha=commit_sha, base=base, owner=owner, repo=repo)
 
     # Test case 2: Verify that the commit is in the master branch
-    branch = "master"
-
-    assert is_commit_in_base(commit_sha=commit_sha, base=branch, owner=owner, repo=repo)
+    base = "master"
+    assert is_commit_in_base(commit_sha=commit_sha, base=base, owner=owner, repo=repo)
 
     # Test case 3: If I specify a foo branch, the function should return False
-    branch = "foo"
-
+    base = "foo"
     assert (
-        is_commit_in_base(commit_sha=commit_sha, base=branch, owner=owner, repo=repo)
+        is_commit_in_base(commit_sha=commit_sha, base=base, owner=owner, repo=repo)
         == False
     )
 
+    # Test case 4: The commit must be only in the v1.5.1
+    base = "v1.5.1"
+    commit_sha = "7d743cdad588a17f2ccad03c190b372554c4bbb5"
+    assert is_commit_in_base(commit_sha=commit_sha, base=base, owner=owner, repo=repo)
+
+    # Test case 4: The commit must be only in the v1.5.1
+    base = "v1.5.0"
+    commit_sha = "7d743cdad588a17f2ccad03c190b372554c4bbb5"
+    assert is_commit_in_base(commit_sha=commit_sha, base=base, owner=owner, repo=repo)
+
+    # Test case 4: The commit must be only in the v1.5.1
+    base = "v1.4.0"
+    commit_sha = "7d743cdad588a17f2ccad03c190b372554c4bbb5"
+    assert is_commit_in_base(commit_sha=commit_sha, base=base, owner=owner, repo=repo) == False
+        
 
 def test_get_commit_by_sha():
     owner = "smeup"
