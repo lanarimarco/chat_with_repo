@@ -1,7 +1,29 @@
-from typing import List
+from typing import List, Type
 import requests
+from langchain_core.pydantic_v1 import BaseModel, Field
+from langchain_core.tools import BaseTool
 
 from chat_with_repo.commit_tools import is_commit_in_base
+from chat_with_repo.model import State
+
+
+class FindTagsByCommitSchema(BaseModel):
+    commit_sha: str = Field(..., title="The commit SHA to search for.")
+
+
+class FindTagsByCommitTool(BaseTool):
+    state: State
+    topK: int = 10
+    args_schema: Type[BaseModel] = FindTagsByCommitSchema
+    name: str = "find_tags_by_commit"
+    description = "Retrieves the tags that contain a specific commit."
+
+    def _run(self, commit_sha: str) -> List[str]:
+        return find_tags_by_commit(
+            commit_sha=commit_sha,
+            owner=self.state.repo.owner,
+            repo=self.state.repo.name,
+        )[: self.topK]
 
 
 def find_tags_by_commit(

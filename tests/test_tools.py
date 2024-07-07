@@ -351,4 +351,3 @@ def test_find_tags_by_commit():
     tags = find_tags_by_commit(commit_sha=commit_sha, owner=owner, repo=repo)
     assert "v1.4.0" in tags
 
-    # 973192ab922828a8ccb0d8e6215996a7d416f2ef

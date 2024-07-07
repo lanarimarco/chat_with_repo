@@ -1,5 +1,6 @@
 from typing import Callable
 from chat_with_repo import OPENAI_API_KEY
+from chat_with_repo.branch_tools import FindBranchesByCommitTool
 from chat_with_repo.commit_tools import (
     GetCommitByShaTool,
     GetCommitsByPathTool,
@@ -27,6 +28,8 @@ from langchain_openai import ChatOpenAI
 
 
 from collections import deque
+
+from chat_with_repo.tag import FindTagsByCommitTool
 
 
 class GitHubAssistant:
@@ -104,7 +107,9 @@ class GitHubAssistant:
                 # Commented because it was implemented in order to retrieve
                 # when a given commit was merged into a branch but it does not
                 # work as expected
-                GetMergingCommitTool(state=self.state),
+                # GetMergingCommitTool(state=self.state),
+                FindBranchesByCommitTool(state=self.state, topK=self.topK),
+                FindTagsByCommitTool(state=self.state, topK=self.topK),
             ]
         agent = create_openai_tools_agent(llm, tools, self.prompt)
         agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)

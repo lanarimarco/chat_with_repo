@@ -146,6 +146,7 @@ def test_get_commit_by_sha():
     response = assistant.chat(message)
     assert "domenico.mancini@apuliasoft.com" in response
 
+# Commented GetMergingCommitTool is not reliable
 def test_get_merging_commit():
     assistant = GitHubAssistant()
     message = """
@@ -153,3 +154,22 @@ def test_get_merging_commit():
     """
     response = assistant.chat(message)
     assert "Marco Lanari" in response
+
+def test_find_branches_by_commit():
+    assistant = GitHubAssistant()
+    message = """
+        Hello, tell me the branches that contain the commit 8d189c51b3ff056aa019c26e93f59e8a603e7735
+    """
+    response = assistant.chat(message)
+    assert "develop" in response
+    assert "master" in response
+
+def test_find_tags_by_commit():
+    assistant = GitHubAssistant()
+    message = """
+        Hello, tell me the tags that contain the commit c37844f8d7c9246676184c8c883b9251d226f287
+    """
+    response = assistant.chat(message)
+    assert "v1.4.0" in response
+    assert "v1.5.0" in response
+    assert "v1.5.1" in response
