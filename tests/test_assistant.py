@@ -173,3 +173,28 @@ def test_find_tags_by_commit():
     assert "v1.4.0" in response
     assert "v1.5.0" in response
     assert "v1.5.1" in response
+
+def test_if_pr_has_been_merged_in_a_master():
+    assistant = GitHubAssistant()
+    message = """
+        Hello, tell me if the pull request 487 has been merged in the branch master. Answer YES or NO
+    """
+    response = assistant.chat(message)
+    assert "YES" in response.upper()
+
+
+def test_if_pr_has_been_merged_in_a_tag():
+    
+    assistant = GitHubAssistant()
+    
+    message = """
+        Hello, tell me if the pull request 487 has been merged in the v1.5.1. Answer YES or NO
+    """
+    response = assistant.chat(message)
+    assert "YES" in response.upper()
+
+    message = """
+        Hello, tell me if the pull request 487 has been merged in the v1.4.0. Answer YES or NO
+    """
+    response = assistant.chat(message)
+    assert "NO" in response.upper()
