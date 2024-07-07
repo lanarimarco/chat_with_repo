@@ -10,6 +10,22 @@ import requests
 from typing import Callable, List, Optional, Type
 
 
+class GetCommitByShaSchema(BaseModel):
+    sha: str = Field(..., description="The SHA of the commit.")
+
+
+class GetCommitByShaTool(BaseTool):
+    state: State
+    args_schema: Type[BaseModel] = GetCommitByShaSchema
+    name: str = "get_commit_by_sha"
+    description = "Retrieves a commit by its SHA."
+
+    def _run(self, sha: str) -> Commit:
+        return get_commit_by_sha(
+            commit_sha=sha, owner=self.state.repo.owner, repo=self.state.repo.value
+        )
+
+
 class GetCommitsByPathSchema(BaseModel):
     path: str = Field(..., description="The path to the file.")
 
@@ -44,24 +60,73 @@ class GetCommitsByPullRequestTool(BaseTool):
         )[: self.topK]
 
 
-class IsCommitInBranchSchema(BaseModel):
+class IsCommitInBaseSchema(BaseModel):
     commit_sha: str = Field(..., description="The commit SHA.")
     branch: str = Field(..., description="The branch name.")
 
 
-class IsCommitInBranchTool(BaseTool):
+class IsCommitInBaseTool(BaseTool):
     state: State
-    args_schema: Type[BaseModel] = IsCommitInBranchSchema
-    name: str = "is_commit_in_branch"
-    description = "Verifies if a commit is in a branch."
+    args_schema: Type[BaseModel] = IsCommitInBaseSchema
+    name: str = "is_commit_in_base"
+    description = "Verifies if a commit is in a  hash, tag or branch name."
 
     def _run(self, commit_sha: str, branch: str) -> bool:
-        return is_commit_in_branch(
+        return is_commit_in_base(
+            commit_sha=commit_sha,
+            base=branch,
+            owner=self.state.repo.owner,
+            repo=self.state.repo.value,
+        )
+
+
+class GetMergingCommitSchema(BaseModel):
+    commit_sha: str = Field(..., description="The commit SHA.")
+    branch: str = Field(..., description="The branch name.")
+
+
+class GetMergingCommitTool(BaseTool):
+    state: State
+    args_schema: Type[BaseModel] = GetMergingCommitSchema
+    name: str = "get_merging_commit"
+    description = "Retrieves the commit that merged a given commit into a branch."
+
+    def _run(self, commit_sha: str, branch: str) -> Optional[str]:
+        return get_merging_commit(
             commit_sha=commit_sha,
             branch=branch,
             owner=self.state.repo.owner,
             repo=self.state.repo.value,
         )
+
+
+def get_commit_by_sha(
+    commit_sha: str, owner: str = "smeup", repo: str = "jariko"
+) -> Optional[Commit]:
+    """
+    Retrieves a commit by its SHA.
+
+    Args:
+        commit_sha (str): The SHA of the commit.
+        owner (str, optional): The owner of the repository. Defaults to "smeup".
+        repo (str, optional): The name of the repository. Defaults to "jariko".
+
+    Returns:
+        Commit: A Commit representing the retrieved commit.
+    """
+    url = f"https://api.github.com/repos/{owner}/{repo}/commits/{commit_sha}"
+    headers = {
+        "Accept": "application/vnd.github.v3+json",
+        "Authorization": f"token {GITHUB_TOKEN}",
+    }
+
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        return Commit.model_validate(response.json())
+    elif response.status_code == 422:
+        return None
+    else:
+        raise Exception(f"Error: {response.status_code} - {response.text}")
 
 
 def get_commits_by_path(
@@ -163,11 +228,34 @@ def compare_commits(
     return commits
 
 
-def is_commit_in_branch(
-    commit_sha: str, branch: str, owner: str = "smeup", repo: str = "jariko"
+def is_commit_in_base(
+    commit_sha: str, base: str, owner: str = "smeup", repo: str = "jariko"
 ) -> bool:
     """
     Verifies if a commit is in a branch.
+
+    Args:
+        commit_sha (str): The commit SHA.
+        base (str): The base commit. Hash, tag or branch name.
+        owner (str, optional): The owner of the repository. Defaults to "smeup".
+        repo (str, optional): The name of the repository. Defaults to "jariko".
+
+    Returns:
+        bool: True if the commit is in the base, False otherwise.
+    """
+    commits = compare_commits(base=base, head=commit_sha, owner=owner, repo=repo)
+    if commits is None:
+        return False
+    return not any(commit.sha == commit_sha for commit in commits)
+
+
+def get_merging_commit(
+    commit_sha: str, branch: str, owner: str = "smeup", repo: str = "jariko"
+) -> Optional[Commit]:
+    """
+    It does now work properly. It should return the commit that merged the given commit into the branch,
+    but actually it returns the parent commit of the given commit.
+    Retrieves the commit that merged a given commit into a branch.
 
     Args:
         commit_sha (str): The commit SHA.
@@ -176,12 +264,38 @@ def is_commit_in_branch(
         repo (str, optional): The name of the repository. Defaults to "jariko".
 
     Returns:
-        bool: True if the commit is in the branch, False otherwise.
+        Optional[Commit]: A Commit representing the retrieved commit. If the commit is not merged into the branch, it returns None.
     """
-    commits = compare_commits(base=branch, head=commit_sha, owner=owner, repo=repo)
-    if commits is None:
-        return False
-    return not any(commit.sha == commit_sha for commit in commits)
+    # URL to check if the commit is in the branch
+    url = f"https://api.github.com/repos/{owner}/{repo}/commits/{commit_sha}"
+
+    # Make the request
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        commit_data = response.json()
+        # Loop through the parents of the commit
+        for parent in commit_data["parents"]:
+            parent_sha = parent["sha"]
+            # Compare the parent commit with the branch
+            compare_url = f"https://api.github.com/repos/{owner}/{repo}/compare/{branch}...{parent_sha}"
+            compare_response = requests.get(compare_url)
+            if compare_response.status_code == 200:
+                compare_data = compare_response.json()
+                # If the commit is part of the branch, return the commit's date
+                if (
+                    compare_data["status"] == "behind"
+                    or compare_data["status"] == "identical"
+                ):
+                    return get_commit_by_sha(
+                        commit_sha=parent_sha, owner=owner, repo=repo
+                    )
+    elif response.status_code == 404:
+        return None
+    else:
+        raise Exception(f"Error: {response.status_code} - {response.text}")
+
+    return None
 
 
 def __get_commits(

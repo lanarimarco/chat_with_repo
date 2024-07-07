@@ -1,9 +1,12 @@
 from typing import List
+from chat_with_repo.branch_tools import find_branches_by_commit
 from chat_with_repo.commit_tools import (
     compare_commits,
+    get_commit_by_sha,
     get_commits_by_path,
     get_commits_by_pull_request,
-    is_commit_in_branch,
+    get_merging_commit,
+    is_commit_in_base,
 )
 from chat_with_repo.pull_request_tools import (
     get_pull_request_by_number,
@@ -12,6 +15,7 @@ from chat_with_repo.pull_request_tools import (
     get_pull_requests_by_path,
 )
 from chat_with_repo.model import Commit, CommitFilter, PullRequest, PullRequestFilter
+from chat_with_repo.tag import find_tags_by_commit
 
 
 def test_get_pull_requests_against_develop():
@@ -263,22 +267,87 @@ def test_is_commit_in_branch():
     commit_sha = "cf4dd0747e305d67071587ee25a06e14551f2f76"
 
     # Test case 1: Verify that the commit is in the develop branch
-    branch = "develop"
-
-    assert is_commit_in_branch(
-        commit_sha=commit_sha, branch=branch, owner=owner, repo=repo
-    )
+    base = "develop"
+    assert is_commit_in_base(commit_sha=commit_sha, base=base, owner=owner, repo=repo)
 
     # Test case 2: Verify that the commit is in the master branch
-    branch = "master"
+    base = "master"
+    assert is_commit_in_base(commit_sha=commit_sha, base=base, owner=owner, repo=repo)
 
-    assert is_commit_in_branch(
-        commit_sha=commit_sha, branch=branch, owner=owner, repo=repo
+    # Test case 3: If I specify a foo branch, the function should return False
+    base = "foo"
+    assert (
+        is_commit_in_base(commit_sha=commit_sha, base=base, owner=owner, repo=repo)
+        == False
     )
 
-     # Test case 3: If I specify a foo branch, the function should return False
-    branch = "foo"
+    # Test case 4: The commit must be only in the v1.5.1
+    base = "v1.5.1"
+    commit_sha = "7d743cdad588a17f2ccad03c190b372554c4bbb5"
+    assert is_commit_in_base(commit_sha=commit_sha, base=base, owner=owner, repo=repo)
 
-    assert is_commit_in_branch(
+    # Test case 4: The commit must be only in the v1.5.1
+    base = "v1.5.0"
+    commit_sha = "7d743cdad588a17f2ccad03c190b372554c4bbb5"
+    assert is_commit_in_base(commit_sha=commit_sha, base=base, owner=owner, repo=repo)
+
+    # Test case 4: The commit must be only in the v1.5.1
+    base = "v1.4.0"
+    commit_sha = "7d743cdad588a17f2ccad03c190b372554c4bbb5"
+    assert is_commit_in_base(commit_sha=commit_sha, base=base, owner=owner, repo=repo) == False
+        
+
+def test_get_commit_by_sha():
+    owner = "smeup"
+    repo = "jariko"
+    commit_sha = "5615e2956bd986d71225498ed1a571ef861f734f"
+    commit = get_commit_by_sha(commit_sha=commit_sha, owner=owner, repo=repo)
+    assert commit.commit.author.email == "domenico.mancini@apuliasoft.com"
+
+
+def test_get_commit_by_sha_not_found():
+    owner = "smeup"
+    repo = "jariko"
+    commit_sha = "foo"
+    commit = get_commit_by_sha(commit_sha=commit_sha, owner=owner, repo=repo)
+    assert commit is None
+
+
+def test_merging_commit():
+    owner = "smeup"
+    repo = "jariko"
+    branch = "develop"
+    commit_sha = "454177945f2cbd33cf859dc54abd4da92eb3c1a5"
+    commit: Commit = get_merging_commit(
         commit_sha=commit_sha, branch=branch, owner=owner, repo=repo
-    ) == False
+    )
+    assert commit.commit.author.email == "40103274+lanarimarco@users.noreply.github.com"
+
+
+def test_merging_commit_not_found():
+    owner = "smeup"
+    repo = "jariko"
+    branch = "foo"
+    commit_sha = "454177945f2cbd33cf859dc54abd4da92eb3c1a5"
+    commit: Commit = get_merging_commit(
+        commit_sha=commit_sha, branch=branch, owner=owner, repo=repo
+    )
+    assert commit is None
+
+
+def test_find_branches_by_commit():
+    repo = "jariko"
+    owner = "smeup"
+    commit_sha = "8d189c51b3ff056aa019c26e93f59e8a603e7735"
+    branches = find_branches_by_commit(commit_sha=commit_sha, owner=owner, repo=repo)
+    assert "develop" in branches
+    assert "master" in branches
+
+
+def test_find_tags_by_commit():
+    repo = "jariko"
+    owner = "smeup"
+    commit_sha = "c37844f8d7c9246676184c8c883b9251d226f287"
+    tags = find_tags_by_commit(commit_sha=commit_sha, owner=owner, repo=repo)
+    assert "v1.4.0" in tags
+
