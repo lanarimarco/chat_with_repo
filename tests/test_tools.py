@@ -6,7 +6,7 @@ from chat_with_repo.commit_tools import (
     get_commits_by_path,
     get_commits_by_pull_request,
     get_merging_commit,
-    is_commit_in_branch,
+    is_commit_in_base,
 )
 from chat_with_repo.pull_request_tools import (
     get_pull_request_by_number,
@@ -269,24 +269,18 @@ def test_is_commit_in_branch():
     # Test case 1: Verify that the commit is in the develop branch
     branch = "develop"
 
-    assert is_commit_in_branch(
-        commit_sha=commit_sha, branch=branch, owner=owner, repo=repo
-    )
+    assert is_commit_in_base(commit_sha=commit_sha, base=branch, owner=owner, repo=repo)
 
     # Test case 2: Verify that the commit is in the master branch
     branch = "master"
 
-    assert is_commit_in_branch(
-        commit_sha=commit_sha, branch=branch, owner=owner, repo=repo
-    )
+    assert is_commit_in_base(commit_sha=commit_sha, base=branch, owner=owner, repo=repo)
 
     # Test case 3: If I specify a foo branch, the function should return False
     branch = "foo"
 
     assert (
-        is_commit_in_branch(
-            commit_sha=commit_sha, branch=branch, owner=owner, repo=repo
-        )
+        is_commit_in_base(commit_sha=commit_sha, base=branch, owner=owner, repo=repo)
         == False
     )
 
@@ -337,6 +331,7 @@ def test_find_branches_by_commit():
     assert "develop" in branches
     assert "master" in branches
 
+
 def test_find_tags_by_commit():
     repo = "jariko"
     owner = "smeup"
@@ -344,5 +339,4 @@ def test_find_tags_by_commit():
     tags = find_tags_by_commit(commit_sha=commit_sha, owner=owner, repo=repo)
     assert "v1.4.0" in tags
 
-
-    #973192ab922828a8ccb0d8e6215996a7d416f2ef
+    # 973192ab922828a8ccb0d8e6215996a7d416f2ef

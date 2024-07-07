@@ -1,7 +1,7 @@
 from typing import List
 import requests
 
-from chat_with_repo.commit_tools import is_commit_in_branch
+from chat_with_repo.commit_tools import is_commit_in_base
 
 
 def find_branches_by_commit(
@@ -16,8 +16,8 @@ def find_branches_by_commit(
 
     for branch in branches:
         branch_name = branch["name"]
-        if is_commit_in_branch(
-            commit_sha=commit_sha, branch=branch_name, owner=owner, repo=repo
+        if is_commit_in_base(
+            commit_sha=commit_sha, base=branch_name, owner=owner, repo=repo
         ):
             branches_by_commit.append(branch_name)
 

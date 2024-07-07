@@ -60,21 +60,21 @@ class GetCommitsByPullRequestTool(BaseTool):
         )[: self.topK]
 
 
-class IsCommitInBranchSchema(BaseModel):
+class IsCommitInBaseSchema(BaseModel):
     commit_sha: str = Field(..., description="The commit SHA.")
     branch: str = Field(..., description="The branch name.")
 
 
-class IsCommitInBranchTool(BaseTool):
+class IsCommitInBaseTool(BaseTool):
     state: State
-    args_schema: Type[BaseModel] = IsCommitInBranchSchema
-    name: str = "is_commit_in_branch"
-    description = "Verifies if a commit is in a branch."
+    args_schema: Type[BaseModel] = IsCommitInBaseSchema
+    name: str = "is_commit_in_base"
+    description = "Verifies if a commit is in a  hash, tag or branch name."
 
     def _run(self, commit_sha: str, branch: str) -> bool:
-        return is_commit_in_branch(
+        return is_commit_in_base(
             commit_sha=commit_sha,
-            branch=branch,
+            base=branch,
             owner=self.state.repo.owner,
             repo=self.state.repo.value,
         )
@@ -228,22 +228,22 @@ def compare_commits(
     return commits
 
 
-def is_commit_in_branch(
-    commit_sha: str, branch: str, owner: str = "smeup", repo: str = "jariko"
+def is_commit_in_base(
+    commit_sha: str, base: str, owner: str = "smeup", repo: str = "jariko"
 ) -> bool:
     """
     Verifies if a commit is in a branch.
 
     Args:
         commit_sha (str): The commit SHA.
-        branch (str): The branch name.
+        base (str): The base commit. Hash, tag or branch name.
         owner (str, optional): The owner of the repository. Defaults to "smeup".
         repo (str, optional): The name of the repository. Defaults to "jariko".
 
     Returns:
-        bool: True if the commit is in the branch, False otherwise.
+        bool: True if the commit is in the base, False otherwise.
     """
-    commits = compare_commits(base=branch, head=commit_sha, owner=owner, repo=repo)
+    commits = compare_commits(base=base, head=commit_sha, owner=owner, repo=repo)
     if commits is None:
         return False
     return not any(commit.sha == commit_sha for commit in commits)

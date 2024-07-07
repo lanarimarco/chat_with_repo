@@ -5,7 +5,7 @@ from chat_with_repo.commit_tools import (
     GetCommitsByPathTool,
     GetCommitsByPullRequestTool,
     GetMergingCommitTool,
-    IsCommitInBranchTool,
+    IsCommitInBaseTool,
 )
 from chat_with_repo.misc_tools import SelectGitHubRepoTool
 from chat_with_repo.model import Repo, State
@@ -98,7 +98,7 @@ class GitHubAssistant:
                 GetPullRequestsByCommitTool(state=self.state, topK=self.topK),
                 GetPullRequestByPathTool(state=self.state, topK=self.topK),
                 GetCommitByShaTool(state=self.state),
-                IsCommitInBranchTool(state=self.state),
+                IsCommitInBaseTool(state=self.state),
                 GetCommitsByPathTool(state=self.state, topK=self.topK),
                 GetCommitsByPullRequestTool(state=self.state, topK=self.topK),
                 # Commented because it was implemented in order to retrieve

@@ -1,7 +1,7 @@
 from typing import List
 import requests
 
-from chat_with_repo.commit_tools import is_commit_in_branch
+from chat_with_repo.commit_tools import is_commit_in_base
 
 
 def find_tags_by_commit(
@@ -17,9 +17,9 @@ def find_tags_by_commit(
     for tag in tags:
         tag_name = tag["name"]
         tag_commit_sha = tag["commit"]["sha"]
-        #print("checking tag", tag_name, tag_commit_sha)
-        if is_commit_in_branch(
-            commit_sha=commit_sha, branch=tag_commit_sha, owner=owner, repo=repo
+        # print("checking tag", tag_name, tag_commit_sha)
+        if is_commit_in_base(
+            commit_sha=commit_sha, base=tag_commit_sha, owner=owner, repo=repo
         ):
             tags_by_commit.append(tag_name)
         else:
