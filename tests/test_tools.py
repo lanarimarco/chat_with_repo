@@ -294,8 +294,11 @@ def test_is_commit_in_branch():
     # Test case 4: The commit must be only in the v1.5.1
     base = "v1.4.0"
     commit_sha = "7d743cdad588a17f2ccad03c190b372554c4bbb5"
-    assert is_commit_in_base(commit_sha=commit_sha, base=base, owner=owner, repo=repo) == False
-        
+    assert (
+        is_commit_in_base(commit_sha=commit_sha, base=base, owner=owner, repo=repo)
+        == False
+    )
+
 
 def test_get_commit_by_sha():
     owner = "smeup"
@@ -351,3 +354,13 @@ def test_find_tags_by_commit():
     tags = find_tags_by_commit(commit_sha=commit_sha, owner=owner, repo=repo)
     assert "v1.4.0" in tags
 
+    repo = "webup-project"
+    commit_sha = "9347197563b47a592a0ce59cd6ae0c4efd66ce87"
+    try:
+        tags = find_tags_by_commit(commit_sha=commit_sha, owner=owner, repo=repo)
+        assert False
+    except Exception as e:
+        assert (
+            "Check if your profile has the the rights for https://api.github.com/repos/smeup/webup-project/tag"
+            in e.args[1]
+        )
