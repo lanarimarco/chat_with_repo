@@ -346,6 +346,20 @@ def test_find_branches_by_commit():
     assert "develop" in branches
     assert "master" in branches
 
+    repo = "kokos-sdk-java-rpgle"
+    commit_sha = "4a062340c4a4269d1c50c9d553f1f22472209a9d"
+
+    try:
+        branches = find_branches_by_commit(
+            commit_sha=commit_sha, owner=owner, repo=repo
+        )
+        assert False
+    except Exception as e:
+        assert (
+            "Check if your profile has the rights for https://api.github.com/repos/smeup/kokos-sdk-java-rpgle/branches"
+            in e.args[1]
+        )
+
 
 def test_find_tags_by_commit():
     repo = "jariko"
@@ -361,6 +375,6 @@ def test_find_tags_by_commit():
         assert False
     except Exception as e:
         assert (
-            "Check if your profile has the the rights for https://api.github.com/repos/smeup/webup-project/tag"
+            "Check if your profile has the rights for https://api.github.com/repos/smeup/webup-project/tags"
             in e.args[1]
         )

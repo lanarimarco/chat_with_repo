@@ -53,6 +53,6 @@ def find_tags_by_commit(
     else:
         raise Exception(
             f"Error: {response.status_code} - {response.text}",
-            f"Check if your profile has the the rights for {tags_url}",
+            f"Check if your profile has the rights for {tags_url}",
         )
     return tags_by_commit

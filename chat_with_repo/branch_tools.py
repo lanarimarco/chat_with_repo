@@ -44,14 +44,21 @@ def find_branches_by_commit(
 
     # List all branches
     branches_url = f"https://api.github.com/repos/{owner}/{repo}/branches"
-    branches_response = requests.get(branches_url)
-    branches = branches_response.json()
+    response = requests.get(branches_url)
 
-    for branch in branches:
-        branch_name = branch["name"]
-        if is_commit_in_base(
-            commit_sha=commit_sha, base=branch_name, owner=owner, repo=repo
-        ):
-            branches_by_commit.append(branch_name)
+    if response.status_code == 200:
+        branches = response.json()
+
+        for branch in branches:
+            branch_name = branch["name"]
+            if is_commit_in_base(
+                commit_sha=commit_sha, base=branch_name, owner=owner, repo=repo
+            ):
+                branches_by_commit.append(branch_name)
+    else:
+        raise Exception(
+            f"Error: {response.status_code} - {response.text}",
+            f"Check if your profile has the rights for {branches_url}",
+        )
 
     return branches_by_commit
