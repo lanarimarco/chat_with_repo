@@ -6,12 +6,17 @@ from enum import Enum
 
 class Repo(Enum):
 
+    chat_with_repo = "chat_with_repo"
+    
     jariko = "jariko"
+    jardis = "jardis"
+    ketchup = "ketchup"
+    kokos = "kokos"
+    kokos_me_node_gibus = "kokos-me-node-gibus"
     kokos_sdk_java_rpgle = "kokos-sdk-java-rpgle"
     webup_project = "webup-project"
     webup_js = "webup.js"
-    jardis = "jardis"
-    chat_with_repo = "chat_with_repo"
+    
 
     @property
     def owner(self):
