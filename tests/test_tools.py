@@ -338,6 +338,7 @@ def test_merging_commit_not_found():
     assert commit is None
 
 
+# TODO verify if the test is correct
 def test_find_branches_by_commit():
     repo = "jariko"
     owner = "smeup"
@@ -360,7 +361,7 @@ def test_find_branches_by_commit():
             in e.args[1]
         )
 
-
+# TODO verify if the test is correct
 def test_find_tags_by_commit():
     repo = "jariko"
     owner = "smeup"
