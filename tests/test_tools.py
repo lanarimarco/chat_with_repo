@@ -15,7 +15,7 @@ from chat_with_repo.pull_request_tools import (
     get_pull_requests_by_path,
 )
 from chat_with_repo.model import Commit, CommitFilter, PullRequest, PullRequestFilter
-from chat_with_repo.tag import find_tags_by_commit
+from chat_with_repo.tag_tools import find_tags_by_commit
 
 
 def test_get_pull_requests_against_develop():

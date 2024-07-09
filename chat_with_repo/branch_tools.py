@@ -3,6 +3,7 @@ import requests
 from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_core.tools import BaseTool
 
+from chat_with_repo import GITHUB_TOKEN
 from chat_with_repo.commit_tools import is_commit_in_base
 from chat_with_repo.model import State
 
@@ -43,8 +44,13 @@ def find_branches_by_commit(
     branches_by_commit = []
 
     # List all branches
-    branches_url = f"https://api.github.com/repos/{owner}/{repo}/branches"
-    response = requests.get(branches_url)
+    url = f"https://api.github.com/repos/{owner}/{repo}/branches"
+    headers = {
+        "Accept": "application/vnd.github.v3+json",
+        "Authorization": f"token {GITHUB_TOKEN}",
+    }
+
+    response = requests.get(url=url, headers=headers)
 
     if response.status_code == 200:
         branches = response.json()
@@ -58,7 +64,7 @@ def find_branches_by_commit(
     else:
         raise Exception(
             f"Error: {response.status_code} - {response.text}",
-            f"Check if your profile has the rights for {branches_url}",
+            f"Check if your profile has the rights for {url}",
         )
 
     return branches_by_commit

@@ -29,7 +29,7 @@ from langchain_openai import ChatOpenAI
 
 from collections import deque
 
-from chat_with_repo.tag import FindTagsByCommitTool
+from chat_with_repo.tag_tools import FindTagsByCommitTool
 
 
 class GitHubAssistant:
