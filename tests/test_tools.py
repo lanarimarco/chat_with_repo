@@ -337,11 +337,10 @@ def test_merging_commit_not_found():
     )
     assert commit is None
 
-
-# TODO verify if the test is correct
 def test_find_branches_by_commit():
-    repo = "jariko"
     owner = "smeup"
+
+    repo = "jariko"
     commit_sha = "8d189c51b3ff056aa019c26e93f59e8a603e7735"
     branches = find_branches_by_commit(commit_sha=commit_sha, owner=owner, repo=repo)
     assert "develop" in branches
@@ -349,17 +348,12 @@ def test_find_branches_by_commit():
 
     repo = "kokos-sdk-java-rpgle"
     commit_sha = "4a062340c4a4269d1c50c9d553f1f22472209a9d"
-
-    try:
-        branches = find_branches_by_commit(
-            commit_sha=commit_sha, owner=owner, repo=repo
-        )
-        assert False
-    except Exception as e:
-        assert (
-            "Check if your profile has the rights for https://api.github.com/repos/smeup/kokos-sdk-java-rpgle/branches"
-            in e.args[1]
-        )
+    branches = find_branches_by_commit(
+        commit_sha=commit_sha, owner=owner, repo=repo
+    )
+    assert "develop" in branches
+    assert "master" in branches
+  
 
 # TODO verify if the test is correct
 def test_find_tags_by_commit():
