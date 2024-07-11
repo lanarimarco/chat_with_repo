@@ -337,6 +337,7 @@ def test_merging_commit_not_found():
     )
     assert commit is None
 
+
 def test_find_branches_by_commit():
     owner = "smeup"
 
@@ -348,28 +349,25 @@ def test_find_branches_by_commit():
 
     repo = "kokos-sdk-java-rpgle"
     commit_sha = "4a062340c4a4269d1c50c9d553f1f22472209a9d"
-    branches = find_branches_by_commit(
-        commit_sha=commit_sha, owner=owner, repo=repo
-    )
+    branches = find_branches_by_commit(commit_sha=commit_sha, owner=owner, repo=repo)
     assert "develop" in branches
     assert "master" in branches
-  
 
-# TODO verify if the test is correct
+
 def test_find_tags_by_commit():
-    repo = "jariko"
     owner = "smeup"
+
+    repo = "jariko"
     commit_sha = "c37844f8d7c9246676184c8c883b9251d226f287"
     tags = find_tags_by_commit(commit_sha=commit_sha, owner=owner, repo=repo)
     assert "v1.4.0" in tags
 
     repo = "webup-project"
-    commit_sha = "9347197563b47a592a0ce59cd6ae0c4efd66ce87"
-    try:
-        tags = find_tags_by_commit(commit_sha=commit_sha, owner=owner, repo=repo)
-        assert False
-    except Exception as e:
-        assert (
-            "Check if your profile has the rights for https://api.github.com/repos/smeup/webup-project/tags"
-            in e.args[1]
-        )
+    commit_sha = "c5e80832543e92d7ff5c2a2fe941aec4e14af201"
+    tags = find_tags_by_commit(
+        commit_sha=commit_sha,
+        owner=owner,
+        repo=repo,
+        tag_match_regexp="[0-9]+.[0-9]+.[0-9]+",
+    )
+    assert "1.20.8" in tags
