@@ -63,7 +63,7 @@ class User(BaseModel):
 class PullRequest(BaseModel):
     number: int
     html_url: str
-
+    diff_url: str
     title: str
     user: User
     body: Optional[str] = None

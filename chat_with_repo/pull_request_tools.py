@@ -383,6 +383,26 @@ def get_pull_requests_by_commit(
     return pull_requests
 
 
+def get_diff_from_diff_url(diff_url: str) -> str:
+    """
+    Retrieves the diff content from a diff URL.
+
+    Args:
+        diff_url (str): The URL of the diff.
+
+    Returns:
+        str: The diff content.
+    """
+    headers = {
+        "Accept": "application/vnd.github.groot-preview+json",  # Required for this API
+        "Authorization": f"token {GITHUB_TOKEN}",
+    }
+    response = requests.get(url = diff_url, headers = headers)
+    if response.status_code == 200:
+        return response.text
+    else:
+        raise Exception(f"Error: {response.status_code} - {response.text}")
+
 def __extract_only_useful_information(text: str) -> str:
     return __remove_duplicated_words(__preserve_only_letters_and_numbers(text))
 
