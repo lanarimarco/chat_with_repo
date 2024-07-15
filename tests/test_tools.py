@@ -9,6 +9,7 @@ from chat_with_repo.commit_tools import (
     is_commit_in_base,
 )
 from chat_with_repo.pull_request_tools import (
+    get_diff_from_diff_url,
     get_pull_request_by_number,
     get_pull_requests,
     get_pull_requests_by_commit,
@@ -371,3 +372,9 @@ def test_find_tags_by_commit():
         tag_match_regexp="[0-9]+.[0-9]+.[0-9]+",
     )
     assert "1.20.8" in tags
+
+def test_get_diff_from_diff_url():
+    diff_url = "https://patch-diff.githubusercontent.com/raw/smeup/jariko/pull/562.diff"
+    diff = get_diff_from_diff_url(diff_url)
+    assert "diff --git a/rpgJavaInterpreter-core/src/main/antlr/RpgLexer.g4 b/rpgJavaInterpreter-core/src/main/antlr/RpgLexer.g4" in diff
+    assert "diff --git a/rpgJavaInterpreter-core/src/main/kotlin/com/smeup/rpgparser/parsing/parsetreetoast/bif.kt b/rpgJavaInterpreter-core/src/main/kotlin/com/smeup/rpgparser/parsing/parsetreetoast/bif.kt" in diff

@@ -11,6 +11,7 @@ from chat_with_repo.commit_tools import (
 from chat_with_repo.misc_tools import SelectGitHubRepoTool
 from chat_with_repo.model import Repo, State
 from chat_with_repo.pull_request_tools import (
+    DescribePullRequestChangeTool,
     GetPullRequestByNumberTool,
     GetPullRequestsByCommitTool,
     GetPullRequestByPathTool,
@@ -104,6 +105,7 @@ class GitHubAssistant:
                 GetPullRequestsTool(state=self.state, topK=self.topK),
                 GetPullRequestsByCommitTool(state=self.state, topK=self.topK),
                 GetPullRequestByPathTool(state=self.state, topK=self.topK),
+                DescribePullRequestChangeTool(),
                 GetCommitByShaTool(state=self.state),
                 IsCommitInBaseTool(state=self.state),
                 GetCommitsByPathTool(state=self.state, topK=self.topK),

@@ -8,7 +8,13 @@ import requests
 
 from chat_with_repo import GITHUB_TOKEN
 from chat_with_repo.commit_tools import get_commits_by_path
-from chat_with_repo.model import PullRequest, PullRequestState, PullRequestFilter, Repo, State
+from chat_with_repo.model import (
+    PullRequest,
+    PullRequestState,
+    PullRequestFilter,
+    Repo,
+    State,
+)
 
 
 class GetPullRequestByNumberSchema(BaseModel):
@@ -40,7 +46,9 @@ class GetPullRequestsByCommitTool(BaseTool):
 
     def _run(self, commit_sha: str) -> List[PullRequest]:
         return get_pull_requests_by_commit(
-            commit_sha=commit_sha, owner=self.state.repo.owner, repo=self.state.repo.value
+            commit_sha=commit_sha,
+            owner=self.state.repo.owner,
+            repo=self.state.repo.value,
         )[: self.topK]
 
 
@@ -56,9 +64,9 @@ class GetPullRequestByPathTool(BaseTool):
     description = "Retrieves a list of pull requests associated with a specific file."
 
     def _run(self, path: str) -> List[PullRequest]:
-        return get_pull_requests_by_path(path=path, owner=self.state.repo.owner, repo=self.state.repo.value)[
-            : self.topK
-        ]
+        return get_pull_requests_by_path(
+            path=path, owner=self.state.repo.owner, repo=self.state.repo.value
+        )[: self.topK]
 
 
 class GetPullRequestsByCommitShema(BaseModel):
@@ -74,7 +82,9 @@ class GetPullRequestsByCommitTool(BaseTool):
 
     def _run(self, commit_sha: str) -> List[PullRequest]:
         return get_pull_requests_by_commit(
-            commit_sha=commit_sha, owner=self.state.repo.owner, repo=self.state.repo.value
+            commit_sha=commit_sha,
+            owner=self.state.repo.owner,
+            repo=self.state.repo.value,
         )[: self.topK]
 
 
@@ -120,6 +130,19 @@ class GetPullRequestsTool(BaseTool):
             owner=self.state.repo.owner,
             repo=self.state.repo.value,
         )[: self.topK]
+
+
+class DescribePullRequestChangeSchema(BaseModel):
+    diff_url: str = Field(..., description="The URL of the diff.")
+
+
+class DescribePullRequestChangeTool(BaseTool):
+    args_schema: Type[BaseModel] = DescribePullRequestChangeSchema
+    name: str = "describe_pull_request_change"
+    description = "Describe the changes in a pull request."
+
+    def _run(self, diff_url: str) -> str:
+        return get_diff_from_diff_url(diff_url)
 
 
 def get_pull_request_by_number(
@@ -381,6 +404,27 @@ def get_pull_requests_by_commit(
         else:
             raise Exception(f"Error: {response.status_code} - {response.text}")
     return pull_requests
+
+
+def get_diff_from_diff_url(diff_url: str) -> str:
+    """
+    Retrieves the diff content from a diff URL.
+
+    Args:
+        diff_url (str): The URL of the diff.
+
+    Returns:
+        str: The diff content.
+    """
+    headers = {
+        "Accept": "application/vnd.github.groot-preview+json",  # Required for this API
+        "Authorization": f"token {GITHUB_TOKEN}",
+    }
+    response = requests.get(url=diff_url, headers=headers)
+    if response.status_code == 200:
+        return response.text
+    else:
+        raise Exception(f"Error: {response.status_code} - {response.text}")
 
 
 def __extract_only_useful_information(text: str) -> str:

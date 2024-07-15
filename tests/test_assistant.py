@@ -138,6 +138,7 @@ def test_is_commit_in_branch():
     response = assistant.chat(message)
     assert "YES" in response.upper()
 
+
 def test_get_commit_by_sha():
     assistant = GitHubAssistant()
     message = """
@@ -145,6 +146,7 @@ def test_get_commit_by_sha():
     """
     response = assistant.chat(message)
     assert "domenico.mancini@apuliasoft.com" in response
+
 
 # Commented GetMergingCommitTool is not reliable
 def test_get_merging_commit():
@@ -155,6 +157,7 @@ def test_get_merging_commit():
     response = assistant.chat(message)
     assert "Marco Lanari" in response
 
+
 def test_find_branches_by_commit():
     assistant = GitHubAssistant()
     message = """
@@ -163,6 +166,7 @@ def test_find_branches_by_commit():
     response = assistant.chat(message)
     assert "develop" in response
     assert "master" in response
+
 
 def test_find_tags_by_commit():
     assistant = GitHubAssistant()
@@ -174,6 +178,7 @@ def test_find_tags_by_commit():
     assert "v1.5.0" in response
     assert "v1.5.1" in response
 
+
 def test_if_pr_has_been_merged_in_a_master():
     assistant = GitHubAssistant()
     message = """
@@ -184,9 +189,9 @@ def test_if_pr_has_been_merged_in_a_master():
 
 
 def test_if_pr_has_been_merged_in_a_tag():
-    
+
     assistant = GitHubAssistant()
-    
+
     message = """
         Hello, tell me if the pull request 487 has been merged in the v1.5.1. Answer YES or NO
     """
@@ -198,3 +203,14 @@ def test_if_pr_has_been_merged_in_a_tag():
     """
     response = assistant.chat(message)
     assert "NO" in response.upper()
+
+
+def test_describe_pull_request_change():
+    assistant = GitHubAssistant()
+    message = """
+        Hello, describe the changes of the pull request 562
+    """
+    response = assistant.chat(message)
+    assert "RpgLexer.g4" in response
+    assert "bif.kt" in response
+    assert "MUDRNRAPU00228.rpgle" in response
