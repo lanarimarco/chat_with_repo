@@ -18,7 +18,7 @@ class GetCommitByShaTool(BaseTool):
     state: State
     args_schema: Type[BaseModel] = GetCommitByShaSchema
     name: str = "get_commit_by_sha"
-    description = "Retrieves a commit by its SHA."
+    description = "Retrieves a commit by its SHA and allows to answer to all questions related a commit identified  by a SHA."
 
     def _run(self, sha: str) -> Commit:
         return get_commit_by_sha(
