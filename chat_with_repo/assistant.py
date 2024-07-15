@@ -72,6 +72,7 @@ class GitHubAssistant:
     to select the repository the user work with and than select the tool related the user's question.
     Default repository is 'jariko'.
     For each task you must use one of the available tools.
+    You must show to the user only the information retrieved by the tool, nothing more and nothing explanation except if the user asks for it.
     If you are not able to find the task related to the user's question, you must show to the user a message where you will show all tools available with a brief description.
     If the user asks if a branch is merged to another branch, you must answer by using tool: 'get_pull_requests'.
     If the user asks if there are pull requests to approve you have to search for pull requests that are in the status 'opened'.
@@ -79,7 +80,12 @@ class GitHubAssistant:
      - search pr with the number provided by the user
      - extact the commit sha from the pr
      - and search for the commit in the branch or tag depends on the user's question
-    You must show to the user only the information retrieved by the tool, nothing more and nothing explanation except if the user asks for it.
+    If the user asks for a code review or description for a given pull request:
+     - call the tool 'describe_pull_request_change'
+     - use the result to show for each file:
+        - file: the file name
+        - changes: the changes explanations summary for file
+     - finaly you have to grade the quality of the changes and explain why you have given that grade, and if needed you can provide suggestions to improve the quality of the changes
     """
     prompt = ChatPromptTemplate.from_messages(
         [
