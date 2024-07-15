@@ -16,7 +16,7 @@ from chat_with_repo.pull_request_tools import (
     get_pull_requests_by_path,
 )
 from chat_with_repo.model import Commit, CommitFilter, PullRequest, PullRequestFilter
-from chat_with_repo.tag import find_tags_by_commit
+from chat_with_repo.tag_tools import find_tags_by_commit
 
 
 def test_get_pull_requests_against_develop():
@@ -340,8 +340,9 @@ def test_merging_commit_not_found():
 
 
 def test_find_branches_by_commit():
-    repo = "jariko"
     owner = "smeup"
+
+    repo = "jariko"
     commit_sha = "8d189c51b3ff056aa019c26e93f59e8a603e7735"
     branches = find_branches_by_commit(commit_sha=commit_sha, owner=owner, repo=repo)
     assert "develop" in branches
@@ -349,36 +350,28 @@ def test_find_branches_by_commit():
 
     repo = "kokos-sdk-java-rpgle"
     commit_sha = "4a062340c4a4269d1c50c9d553f1f22472209a9d"
-
-    try:
-        branches = find_branches_by_commit(
-            commit_sha=commit_sha, owner=owner, repo=repo
-        )
-        assert False
-    except Exception as e:
-        assert (
-            "Check if your profile has the rights for https://api.github.com/repos/smeup/kokos-sdk-java-rpgle/branches"
-            in e.args[1]
-        )
+    branches = find_branches_by_commit(commit_sha=commit_sha, owner=owner, repo=repo)
+    assert "develop" in branches
+    assert "master" in branches
 
 
 def test_find_tags_by_commit():
-    repo = "jariko"
     owner = "smeup"
+
+    repo = "jariko"
     commit_sha = "c37844f8d7c9246676184c8c883b9251d226f287"
     tags = find_tags_by_commit(commit_sha=commit_sha, owner=owner, repo=repo)
     assert "v1.4.0" in tags
 
     repo = "webup-project"
-    commit_sha = "9347197563b47a592a0ce59cd6ae0c4efd66ce87"
-    try:
-        tags = find_tags_by_commit(commit_sha=commit_sha, owner=owner, repo=repo)
-        assert False
-    except Exception as e:
-        assert (
-            "Check if your profile has the rights for https://api.github.com/repos/smeup/webup-project/tags"
-            in e.args[1]
-        )
+    commit_sha = "c5e80832543e92d7ff5c2a2fe941aec4e14af201"
+    tags = find_tags_by_commit(
+        commit_sha=commit_sha,
+        owner=owner,
+        repo=repo,
+        tag_match_regexp="[0-9]+.[0-9]+.[0-9]+",
+    )
+    assert "1.20.8" in tags
 
 def test_get_diff_from_diff_url():
     diff_url = "https://patch-diff.githubusercontent.com/raw/smeup/jariko/pull/562.diff"
