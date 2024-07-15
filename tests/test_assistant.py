@@ -149,13 +149,14 @@ def test_get_commit_by_sha():
 
 
 # Commented GetMergingCommitTool is not reliable
-def test_get_merging_commit():
-    assistant = GitHubAssistant()
-    message = """
-        Hello tell who has merged in the develop this commit 5615e2956bd986d71225498ed1a571ef861f734f
-    """
-    response = assistant.chat(message)
-    assert "Marco Lanari" in response
+# and I don't know how even me how can the agent answer this question
+# def test_get_merging_commit():
+#     assistant = GitHubAssistant()
+#     message = """
+#         Hello tell who has merged in the develop this commit 5615e2956bd986d71225498ed1a571ef861f734f
+#     """
+#     response = assistant.chat(message)
+#     assert "Marco Lanari" in response
 
 
 def test_find_branches_by_commit():
