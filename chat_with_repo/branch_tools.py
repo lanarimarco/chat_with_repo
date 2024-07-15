@@ -41,30 +41,32 @@ def find_branches_by_commit(
         A list of branch names that contain the specified commit.
     """
 
-    branches_by_commit = []
-
     # List all branches
     url = f"https://api.github.com/repos/{owner}/{repo}/branches"
     headers = {
         "Accept": "application/vnd.github.v3+json",
         "Authorization": f"token {GITHUB_TOKEN}",
     }
+    params = {
+        "per_page": 100,
+    }
 
-    response = requests.get(url=url, headers=headers)
-
-    if response.status_code == 200:
-        branches = response.json()
-
-        for branch in branches:
-            branch_name = branch["name"]
-            if is_commit_in_base(
-                commit_sha=commit_sha, base=branch_name, owner=owner, repo=repo
-            ):
-                branches_by_commit.append(branch_name)
-    else:
-        raise Exception(
-            f"Error: {response.status_code} - {response.text}",
-            f"Check if your profile has the rights for {url}",
-        )
-
+    nextUrl = url
+    branches_by_commit = []
+    while nextUrl:
+        response = requests.get(url=nextUrl, headers=headers, params=params)
+        if response.status_code == 200:
+            nextUrl = response.links.get("next", {}).get("url")
+            branches = response.json()
+            for branch in branches:
+                branch_name = branch["name"]
+                if is_commit_in_base(
+                    commit_sha=commit_sha, base=branch_name, owner=owner, repo=repo
+                ):
+                    branches_by_commit.append(branch_name)
+        else:
+            raise Exception(
+                f"Error: {response.status_code} - {response.text}",
+                f"Check if your profile has the rights for {url}",
+            )
     return branches_by_commit
