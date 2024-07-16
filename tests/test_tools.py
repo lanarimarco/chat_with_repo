@@ -10,7 +10,6 @@ from chat_with_repo.commit_tools import (
 )
 from chat_with_repo.pull_request_tools import (
     get_diff,
-    get_diff_from_diff_url,
     get_pull_request_by_number,
     get_pull_requests,
     get_pull_requests_by_commit,
