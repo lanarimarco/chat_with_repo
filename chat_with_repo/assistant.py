@@ -87,6 +87,9 @@ class GitHubAssistant:
         - file: the file name
         - changes: the changes explanations summary for file
      - finaly you have to grade the quality of the changes and explain why you have given that grade, and if needed you can provide suggestions to improve the quality of the changes
+    If the user asks if a commit is in a branch you have:
+     - call 'get_pull_requests_by_commit' and retrieve information from the result
+     - if the previows tool does not return any pull request you have to call 'is_commit_in_base' and retrieve information from the result
     """
     prompt = ChatPromptTemplate.from_messages(
         [

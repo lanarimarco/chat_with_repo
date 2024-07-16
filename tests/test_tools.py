@@ -35,20 +35,6 @@ def test_get_pull_requests_against_develop():
     assert len(pull_requests) > 0
 
 
-def test_get_pull_requests_by_commit():
-    # Test case 1: Verify that the correct pull request is returned for a given commit SHA
-    commit_sha = "5bc1da09bab1d53b28fbcfdcf9f01fd766bb3b05"
-    owner = "smeup"
-    repo = "jariko"
-
-    pull_requests: List[PullRequest] = get_pull_requests_by_commit(
-        commit_sha=commit_sha, owner=owner, repo=repo
-    )
-
-    assert len(pull_requests) == 1
-    assert pull_requests[0].number == 534
-
-
 def test_get_pull_requests_opened_from_branch():
     # Test case 1: perf/chain_with_cache branch
     opened_from_branch = "perf/chain_with_cache"
@@ -211,6 +197,13 @@ def test_get_pull_requests_by_commit():
 
     assert len(pull_requests) == 0
 
+    # Test case 2: Issue https://github.com/lanarimarco/chat_with_repo/issues/4
+    commit_sha = "d0b158733fd4d4625bab3c4c854e49b67a89f422"
+    pull_requests: List[PullRequest] = get_pull_requests_by_commit(
+        commit_sha=commit_sha, owner=owner, repo="kokos-sdk-java-rpgle"
+    )
+    assert len(pull_requests) == 1
+
 
 def test_get_commits_by_path():
     # Test case 1: Verify that the correct pull requests are returned for a given file
@@ -299,6 +292,14 @@ def test_is_commit_in_branch():
         is_commit_in_base(commit_sha=commit_sha, base=base, owner=owner, repo=repo)
         == False
     )
+
+    # Test case 5: Issue https://github.com/lanarimarco/chat_with_repo/issues/4
+    # is_commit_in_base does not provide expected results becasue the branches are in diverged status
+    base = "develop"
+    commit_sha = "d0b158733fd4d4625bab3c4c854e49b67a89f422"
+    assert is_commit_in_base(
+        commit_sha=commit_sha, base=base, owner="smeup", repo="kokos-sdk-java-rpgle"
+    ) == False
 
 
 def test_get_commit_by_sha():
@@ -391,9 +392,9 @@ def test_get_diff_kokos():
         in diff
     )
 
+
 def test_get_diff_webupjs():
     number = 367
     diff = get_diff(number=number, owner="smeup", repo="webup.js")
     assert "cypress/e2e/components/smeup/for/for.cy.ts" in diff
     assert "jest/unit/managers/converters/utilities/dataToJ5.test.ts" in diff
-
