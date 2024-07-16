@@ -228,3 +228,13 @@ def test_description_pull_request_change_in_kokos():
     """
     response = assistant.chat(message)
     assert "RpgSyntaxChecker.java" in response
+
+
+def test_is_branch_merged_in_develop_kokos():
+    assistant = GitHubAssistant()
+    assistant.state.repo = Repo.kokos_sdk_java_rpgle
+    message = """
+        Hello, tell me if the branch feat/NW24000624/program_finder_better_exception_handling is merged in develop. Answer YES or NO
+    """
+    response = assistant.chat(message)
+    assert "YES" in response.upper()
