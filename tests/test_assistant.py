@@ -112,6 +112,17 @@ def test_is_commit_in_branch_develop():
     response = assistant.chat(message)
     assert "YES" in response.upper()
 
+def test_is_commit_in_branch_develop_kokos():
+    # Issue: https://github.com/lanarimarco/chat_with_repo/issues/4
+    assistant = GitHubAssistant()
+    assistant.state.repo = Repo.kokos_sdk_java_rpgle
+    message = """
+        Hello, tell me if the commit d0b158733fd4d4625bab3c4c854e49b67a89f422 is in the develop. Answer YES or NO followed by the explanation
+    """
+    response = assistant.chat(message)
+    assert "YES" in response.upper()
+
+
 
 def test_is_commit_in_branch_master():
     assistant = GitHubAssistant()
@@ -120,6 +131,7 @@ def test_is_commit_in_branch_master():
     """
     response = assistant.chat(message)
     assert "YES" in response.upper()
+
 
 
 def test_get_commits_by_pull_request():
