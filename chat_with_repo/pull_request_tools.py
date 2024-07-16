@@ -133,16 +133,17 @@ class GetPullRequestsTool(BaseTool):
 
 
 class DescribePullRequestChangeSchema(BaseModel):
-    diff_url: str = Field(..., description="The URL of the diff.")
+    number: int = Field(..., description="The pull request number.")
 
 
 class DescribePullRequestChangeTool(BaseTool):
     args_schema: Type[BaseModel] = DescribePullRequestChangeSchema
+    state: State
     name: str = "describe_pull_request_change"
-    description = "Describe the changes in a pull request."
+    description = "Describe the changes in a pull request by its number."
 
-    def _run(self, diff_url: str) -> str:
-        return get_diff_from_diff_url(diff_url)
+    def _run(self, number: int) -> str:
+        return get_diff(number = number, owner=self.state.repo.owner, repo=self.state.repo.value)
 
 
 def get_pull_request_by_number(
@@ -406,21 +407,23 @@ def get_pull_requests_by_commit(
     return pull_requests
 
 
-def get_diff_from_diff_url(diff_url: str) -> str:
-    """
-    Retrieves the diff content from a diff URL.
+def get_diff(number: int, owner: str = "smeup", repo: str = "jariko") -> str:
+    """Retrieves the diff content of a pull request.
 
     Args:
-        diff_url (str): The URL of the diff.
+        number (int): The number of the pull request.
+        owner (str, optional): The owner of the repo. Defaults to "smeup".
+        repo (str, optional): The name of the repo. Defaults to "jariko".
 
     Returns:
-        str: The diff content.
+        str: The diff content of the pull request.
     """
+    api_url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{number}"
     headers = {
-        "Accept": "application/vnd.github.groot-preview+json",  # Required for this API
-        "Authorization": f"token {GITHUB_TOKEN}",
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3.diff",
     }
-    response = requests.get(url=diff_url, headers=headers)
+    response = requests.get(url=api_url, headers=headers)
     if response.status_code == 200:
         return response.text
     else:

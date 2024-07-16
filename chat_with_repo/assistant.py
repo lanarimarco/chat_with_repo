@@ -111,7 +111,7 @@ class GitHubAssistant:
                 GetPullRequestsTool(state=self.state, topK=self.topK),
                 GetPullRequestsByCommitTool(state=self.state, topK=self.topK),
                 GetPullRequestByPathTool(state=self.state, topK=self.topK),
-                DescribePullRequestChangeTool(),
+                DescribePullRequestChangeTool(state=self.state),
                 GetCommitByShaTool(state=self.state),
                 IsCommitInBaseTool(state=self.state),
                 GetCommitsByPathTool(state=self.state, topK=self.topK),

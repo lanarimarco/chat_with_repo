@@ -1,4 +1,5 @@
 from chat_with_repo.assistant import GitHubAssistant
+from chat_with_repo.model import Repo
 
 
 def test_get_title_by_commit():
@@ -206,7 +207,8 @@ def test_if_pr_has_been_merged_in_a_tag():
     assert "NO" in response.upper()
 
 
-def test_describe_pull_request_change():
+def test_describe_pull_request_change_in_jariko():
+    # Describe the changes of the pull request 562 in Jariko
     assistant = GitHubAssistant()
     message = """
         Hello, describe the changes of the pull request 562
@@ -215,3 +217,14 @@ def test_describe_pull_request_change():
     assert "RpgLexer.g4" in response
     assert "bif.kt" in response
     assert "MUDRNRAPU00228.rpgle" in response
+
+
+def test_description_pull_request_change_in_kokos():
+    # Describe the changes of the pull request 168 in kokos-sdk-java-rpgle
+    assistant = GitHubAssistant()
+    assistant.state.repo = Repo.kokos_sdk_java_rpgle
+    message = """
+        Hello, describe the changes of the pull request 168
+    """
+    response = assistant.chat(message)
+    assert "RpgSyntaxChecker.java" in response
