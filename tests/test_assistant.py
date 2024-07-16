@@ -227,4 +227,4 @@ def test_description_pull_request_change_in_kokos():
         Hello, describe the changes of the pull request 168
     """
     response = assistant.chat(message)
-    pass
+    assert "RpgSyntaxChecker.java" in response
