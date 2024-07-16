@@ -300,6 +300,13 @@ def test_is_commit_in_branch():
         == False
     )
 
+    # Test case 5: Issue https://github.com/lanarimarco/chat_with_repo/issues/4
+    base = "develop"
+    commit_sha = "d0b158733fd4d4625bab3c4c854e49b67a89f422"
+    assert is_commit_in_base(
+        commit_sha=commit_sha, base=base, owner="smeup", repo="kokos-sdk-java-rpgle"
+    )
+
 
 def test_get_commit_by_sha():
     owner = "smeup"
@@ -391,9 +398,9 @@ def test_get_diff_kokos():
         in diff
     )
 
+
 def test_get_diff_webupjs():
     number = 367
     diff = get_diff(number=number, owner="smeup", repo="webup.js")
     assert "cypress/e2e/components/smeup/for/for.cy.ts" in diff
     assert "jest/unit/managers/converters/utilities/dataToJ5.test.ts" in diff
-
