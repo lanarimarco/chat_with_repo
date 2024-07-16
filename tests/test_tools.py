@@ -390,3 +390,10 @@ def test_get_diff_kokos():
         "diff --git a/kokos-sdk-rpgle/src/main/java/com/smeup/kokos/sdk/rpgle/syntaxchecker/RpgSyntaxChecker.java"
         in diff
     )
+
+def test_get_diff_webupjs():
+    number = 367
+    diff = get_diff(number=number, owner="smeup", repo="webup.js")
+    assert "cypress/e2e/components/smeup/for/for.cy.ts" in diff
+    assert "jest/unit/managers/converters/utilities/dataToJ5.test.ts" in diff
+
