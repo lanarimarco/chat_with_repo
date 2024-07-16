@@ -427,6 +427,29 @@ def get_diff_from_diff_url(diff_url: str) -> str:
         raise Exception(f"Error: {response.status_code} - {response.text}")
 
 
+def get_diff(number: int, owner: str = "smeup", repo: str = "jariko") -> str:
+    """Retrieves the diff content of a pull request.
+
+    Args:
+        number (int): The number of the pull request.
+        owner (str, optional): The owner of the repo. Defaults to "smeup".
+        repo (str, optional): The name of the repo. Defaults to "jariko".
+
+    Returns:
+        str: The diff content of the pull request.
+    """
+    api_url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{number}"
+    headers = {
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3.diff",
+    }
+    response = requests.get(url=api_url, headers=headers)
+    if response.status_code == 200:
+        return response.text
+    else:
+        raise Exception(f"Error: {response.status_code} - {response.text}")
+
+
 def __extract_only_useful_information(text: str) -> str:
     return __remove_duplicated_words(__preserve_only_letters_and_numbers(text))
 

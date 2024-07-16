@@ -9,6 +9,7 @@ from chat_with_repo.commit_tools import (
     is_commit_in_base,
 )
 from chat_with_repo.pull_request_tools import (
+    get_diff,
     get_diff_from_diff_url,
     get_pull_request_by_number,
     get_pull_requests,
@@ -373,8 +374,20 @@ def test_find_tags_by_commit():
     )
     assert "1.20.8" in tags
 
-def test_get_diff_from_diff_url():
-    diff_url = "https://patch-diff.githubusercontent.com/raw/smeup/jariko/pull/562.diff"
-    diff = get_diff_from_diff_url(diff_url)
-    assert "diff --git a/rpgJavaInterpreter-core/src/main/antlr/RpgLexer.g4 b/rpgJavaInterpreter-core/src/main/antlr/RpgLexer.g4" in diff
-    assert "diff --git a/rpgJavaInterpreter-core/src/main/kotlin/com/smeup/rpgparser/parsing/parsetreetoast/bif.kt b/rpgJavaInterpreter-core/src/main/kotlin/com/smeup/rpgparser/parsing/parsetreetoast/bif.kt" in diff
+
+def test_get_diff_jariko():
+    number = 569
+    diff = get_diff(number=number)
+    assert (
+        "diff --git a/rpgJavaInterpreter-core/src/main/kotlin/com/smeup/rpgparser/execution/Configuration.kt b/rpgJavaInterpreter-core/src/main/kotlin/com/smeup/rpgparser/execution/Configuration.kt"
+        in diff
+    )
+
+
+def test_get_diff_kokos():
+    number = 168
+    diff = get_diff(number=number, owner="smeup", repo="kokos-sdk-java-rpgle")
+    assert (
+        "diff --git a/kokos-sdk-rpgle/src/main/java/com/smeup/kokos/sdk/rpgle/syntaxchecker/RpgSyntaxChecker.java"
+        in diff
+    )
