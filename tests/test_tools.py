@@ -35,20 +35,6 @@ def test_get_pull_requests_against_develop():
     assert len(pull_requests) > 0
 
 
-def test_get_pull_requests_by_commit():
-    # Test case 1: Verify that the correct pull request is returned for a given commit SHA
-    commit_sha = "5bc1da09bab1d53b28fbcfdcf9f01fd766bb3b05"
-    owner = "smeup"
-    repo = "jariko"
-
-    pull_requests: List[PullRequest] = get_pull_requests_by_commit(
-        commit_sha=commit_sha, owner=owner, repo=repo
-    )
-
-    assert len(pull_requests) == 1
-    assert pull_requests[0].number == 534
-
-
 def test_get_pull_requests_opened_from_branch():
     # Test case 1: perf/chain_with_cache branch
     opened_from_branch = "perf/chain_with_cache"
@@ -210,6 +196,13 @@ def test_get_pull_requests_by_commit():
     )
 
     assert len(pull_requests) == 0
+
+    # Test case 2: Issue https://github.com/lanarimarco/chat_with_repo/issues/4
+    commit_sha = "d0b158733fd4d4625bab3c4c854e49b67a89f422"
+    pull_requests: List[PullRequest] = get_pull_requests_by_commit(
+        commit_sha=commit_sha, owner=owner, repo="kokos-sdk-java-rpgle"
+    )
+    assert len(pull_requests) == 1
 
 
 def test_get_commits_by_path():
