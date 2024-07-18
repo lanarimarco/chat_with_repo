@@ -5,7 +5,6 @@ from chat_with_repo.commit_tools import (
     GetCommitByShaTool,
     GetCommitsByPathTool,
     GetCommitsByPullRequestTool,
-    GetMergingCommitTool,
     IsCommitInBaseTool,
 )
 from chat_with_repo.misc_tools import SelectGitHubRepoTool
@@ -82,11 +81,18 @@ class GitHubAssistant:
      - extact the commit sha from the pr
      - and search for the commit in the branch or tag depends on the user's question
     If the user asks for a code review or description for a given pull request:
-     - call the tool 'describe_pull_request_change'
-     - use the result to show for each file:
-        - file: the file name
-        - changes: the changes explanations summary for file
-     - finaly you have to grade the quality of the changes and explain why you have given that grade, and if needed you can provide suggestions to improve the quality of the changes
+     - call the tool 'describe_pull_request_change'and use the result to produce a report with the following structure:
+        - Purpose:
+          a high level explanation of the pull request without going into the details of the changes because the aspect
+          will be faced in another section of the report
+        - Grade:  
+          what do you think about the changes in terms of quality of code, readability, and maintainability
+        - Conclusions:
+          You have to tell user If you think that there are some improvements and explains them, or if the suer approve this pr as it is 
+        - Details:
+          for each file show 
+            - the file path that has been changed
+            - a brief explanation of the changes for that file
     If the user asks if a commit is in a branch you have:
      - call 'get_pull_requests_by_commit' and retrieve information from the result
      - if the previows tool does not return any pull request you have to call 'is_commit_in_base' and retrieve information from the result
