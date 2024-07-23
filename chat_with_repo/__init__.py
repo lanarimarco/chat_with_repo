@@ -11,7 +11,8 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 # Google settings
 # Client ID and secret are stored in the client_secret.json
 # Google project: https://console.cloud.google.com/apis/credentials?project=chatwithrepo-429720
-# Account: lanarimar@gmail.com
+# Account: lanarimarco@gmail.com
+#Credenziali -> ID client OAuth 2.0 - development
 CLIENT_SECRET_PATH = os.path.join(os.getcwd(), "client_secret.json")
 
 SCOPES = [
