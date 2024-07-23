@@ -4,13 +4,7 @@ from google.oauth2 import id_token
 import requests
 
 from chat_with_repo import CLIENT_SECRET_PATH, SCOPES
-
-
-class User:
-    def __init__(self, email: str, name: str, avatar: bytes):
-        self.email = email
-        self.name = name
-        self.avatar = avatar
+from chat_with_repo.users import User
 
 
 def get_user() -> User:
@@ -38,7 +32,10 @@ def __redirect_to_auth():
     authorization_url, state = flow.authorization_url(
         access_type="offline", prompt="select_account"
     )
-    st.markdown(f'<meta http-equiv="refresh" content="0;URL={authorization_url}">', unsafe_allow_html=True)
+    st.markdown(
+        f'<meta http-equiv="refresh" content="0;URL={authorization_url}">',
+        unsafe_allow_html=True,
+    )
     # st.write(f"Please go to this URL and authorize access: {authorization_url}")
 
 
@@ -48,18 +45,24 @@ def __handle_auth_response():
     flow.fetch_token(code=st.query_params["code"])
     credentials = flow.credentials
     access_token = credentials.token
-    user_info_endpoint = 'https://www.googleapis.com/oauth2/v3/userinfo'
-    
-    response = requests.get(user_info_endpoint, headers={'Authorization': f'Bearer {access_token}'})
+    user_info_endpoint = "https://www.googleapis.com/oauth2/v3/userinfo"
+
+    response = requests.get(
+        user_info_endpoint, headers={"Authorization": f"Bearer {access_token}"}
+    )
 
     if response.status_code == 200:
         user_info = response.json()
-        avatar = requests.get(user_info.get('picture'), headers={'Authorization': f'Bearer {access_token}'}).content
-        user = User(email=user_info.get('email'), name=user_info.get('name'), avatar=avatar)
+        avatar = requests.get(
+            user_info.get("picture"),
+            headers={"Authorization": f"Bearer {access_token}"},
+        ).content
+        user = User(
+            email=user_info.get("email"), name=user_info.get("name"), avatar=avatar
+        )
         st.session_state["user"] = user
     else:
         st.error(f"Failed to fetch user info: {response.text}")
-
 
 
 def custom_request(url, method="GET", **kwargs):
