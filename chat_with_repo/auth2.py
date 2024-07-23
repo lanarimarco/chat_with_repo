@@ -17,11 +17,12 @@ def get_user() -> User:
     if st.session_state.get("user", ""):
         return st.session_state["user"]
     else:
-        if st.button("Login with Google"):
-            __redirect_to_auth()
         if st.query_params.get("code", ""):
             __handle_auth_response()
             st.session_state["authenticated"] = True
+            return st.session_state["user"]
+        if st.button("Login with Google"):
+            __redirect_to_auth()
 
 
 def __create_flow() -> InstalledAppFlow:

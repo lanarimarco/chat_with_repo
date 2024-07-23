@@ -23,39 +23,40 @@ def main():
 
     user = get_user()
 
-    # Initialize chat history
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-    if "assistant" not in st.session_state:
-        st.session_state.assistant = GitHubAssistant()
+    if user is not None:
+        # Initialize chat history
+        if "messages" not in st.session_state:
+            st.session_state.messages = []
+        if "assistant" not in st.session_state:
+            st.session_state.assistant = GitHubAssistant()
 
-    assistant: GitHubAssistant = st.session_state.assistant
+        assistant: GitHubAssistant = st.session_state.assistant
 
-    # Display chat messages from history on app rerun
-    for message in st.session_state.messages:
-        if message["role"] == user.name:
+        # Display chat messages from history on app rerun
+        for message in st.session_state.messages:
+            if message["role"] == user.name:
+                with st.chat_message(user.name, avatar=user.avatar):
+                    st.markdown(message["content"])
+            else:
+                with st.chat_message(message["role"]):
+                    st.markdown(message["content"])
+
+        # React to user input
+        if prompt := st.chat_input(f"Hello {user.email} how can I help you?"):
+            # Display user message in chat message container
             with st.chat_message(user.name, avatar=user.avatar):
-                st.markdown(message["content"])
-        else:
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
+                st.markdown(prompt)
+            # Add user message to chat history
+            st.session_state.messages.append({"role": user.name, "content": prompt})
 
-    # React to user input
-    if prompt := st.chat_input("Hello, how can I help you?"):
-        # Display user message in chat message container
-        with st.chat_message(user.name, avatar=user.avatar):
-            st.markdown(prompt)
-        # Add user message to chat history
-        st.session_state.messages.append({"role": user.name, "content": prompt})
-
-        response = st.session_state.assistant.chat(prompt)
-        # Display assistant response in chat message container
-        with st.chat_message(name=assistant.state.repo.value):
-            st.markdown(response)
-        # Add assistant response to chat history
-        st.session_state.messages.append(
-            {"role": assistant.state.repo.value, "content": response}
-        )
+            response = st.session_state.assistant.chat(prompt)
+            # Display assistant response in chat message container
+            with st.chat_message(name=assistant.state.repo.value):
+                st.markdown(response)
+            # Add assistant response to chat history
+            st.session_state.messages.append(
+                {"role": assistant.state.repo.value, "content": response}
+            )
 
 
 def process_message(message):
