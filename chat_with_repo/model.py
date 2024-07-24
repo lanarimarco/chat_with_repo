@@ -85,11 +85,11 @@ class Author(BaseModel):
 class CommitDetail(BaseModel):
     author: Author
     message: str
-    url: str
 
 
 class Commit(BaseModel):
     sha: str
+    html_url: str
     commit: CommitDetail
 
 
