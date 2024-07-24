@@ -38,7 +38,7 @@ class GitHubAssistant:
         self,
         owner: str = "smeup",
         repo: str = "jariko",
-        model: str = "gpt-3.5-turbo",
+        model: str = "gpt-4o-mini",
         chat_history_length: int = 10,
         topK: int = 10,
         on_change_repo: Callable[[str], None] = None,
