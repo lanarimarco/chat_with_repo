@@ -14,6 +14,7 @@ class Repo(Enum):
     kokos = "kokos"
     kokos_me_node_gibus = "kokos-me-node-gibus"
     kokos_sdk_java_rpgle = "kokos-sdk-java-rpgle"
+    reload = "reload"
     webup_project = "webup-project"
     webup_js = "webup.js"
     
@@ -84,11 +85,11 @@ class Author(BaseModel):
 class CommitDetail(BaseModel):
     author: Author
     message: str
-    url: str
 
 
 class Commit(BaseModel):
     sha: str
+    html_url: str
     commit: CommitDetail
 
 

@@ -3,6 +3,7 @@ from chat_with_repo.assistant import GitHubAssistant
 from enum import Enum
 
 from chat_with_repo.auth2 import get_user
+from chat_with_repo.users import AuthorizationManager
 
 
 class Role(Enum):
@@ -17,13 +18,18 @@ class Role(Enum):
             return "https://raw.githubusercontent.com/smeup/jariko/develop/images/jariko_small.png"
 
 
+authorization_manager = AuthorizationManager()
+
+
 def main():
 
     st.title("Chat with smeup repo")
 
     user = get_user()
 
-    if user is not None:
+    authorized = False if not user else authorization_manager.is_authorized(user.email)
+
+    if user is not None and authorized:
         # Initialize chat history
         if "messages" not in st.session_state:
             st.session_state.messages = []
@@ -57,6 +63,8 @@ def main():
             st.session_state.messages.append(
                 {"role": assistant.state.repo.value, "content": response}
             )
+    elif user is not None and not authorized:
+        st.error(body=f"User {user.email} is not authorized to use this app.")
 
 
 def process_message(message):
