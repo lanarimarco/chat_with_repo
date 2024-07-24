@@ -1,13 +1,16 @@
 import streamlit as st
 from google_auth_oauthlib.flow import InstalledAppFlow
-from google.oauth2 import id_token
 import requests
 
-from chat_with_repo import CLIENT_SECRET_PATH, SCOPES
+from chat_with_repo import CLIENT_SECRET_PATH, DEBUG, SCOPES
 from chat_with_repo.users import User
+
+__debug_user = User(email="debuguser@debug.it", name="Debug User", avatar="😎")
 
 
 def get_user() -> User:
+    if DEBUG:
+        return __debug_user
     if st.session_state.get("user", ""):
         return st.session_state["user"]
     else:

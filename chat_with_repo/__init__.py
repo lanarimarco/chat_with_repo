@@ -24,6 +24,11 @@ SCOPES = [
 
 AUTHORAZED_USERS = os.getenv("AUTHORIZED_USERS")
 
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"
+
+
+## Validation
+
 if not GITHUB_TOKEN:
     raise Exception(
         "Wrong github settings. GITHUB_TOKEN environment variable is not set."

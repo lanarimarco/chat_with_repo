@@ -1,6 +1,6 @@
 from typing import List
 
-from chat_with_repo import AUTHORAZED_USERS
+from chat_with_repo import AUTHORAZED_USERS, DEBUG
 
 from enum import Enum
 
@@ -24,6 +24,8 @@ class AuthorizationManager:
         pass
 
     def is_authorized(self, email: str) -> bool:
+        if DEBUG:
+            return True
         for user in get_authorized_users():
             if user.email.upper() == email.upper():
                 return user.authorized
