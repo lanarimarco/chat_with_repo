@@ -22,7 +22,7 @@ class Repo(Enum):
     @property
     def owner(self):
         if self == Repo.chat_with_repo:
-            return "lanarmarco"
+            return "lanarimarco"
         else:
             return "smeup"
     
