@@ -226,10 +226,8 @@ def test_describe_pull_request_change_in_jariko():
         Hello, describe the changes of the pull request 562
     """
     response = assistant.chat(message)
-    assert "RpgLexer.g4" in response
-    assert "bif.kt" in response
-    assert "MUDRNRAPU00228.rpgle" in response
-
+    assert "PURPOSE" in response.upper()
+    assert "SUGGESTION" in response.upper()
 
 def test_description_pull_request_change_in_kokos():
     # Describe the changes of the pull request 168 in kokos-sdk-java-rpgle
@@ -239,7 +237,8 @@ def test_description_pull_request_change_in_kokos():
         Hello, describe the changes of the pull request 168
     """
     response = assistant.chat(message)
-    assert "RpgSyntaxChecker.java" in response
+    assert "PURPOSE" in response.upper()
+    assert "SUGGESTION" in response.upper()
 
 
 def test_is_branch_merged_in_develop_kokos():
@@ -250,3 +249,12 @@ def test_is_branch_merged_in_develop_kokos():
     """
     response = assistant.chat(message)
     assert "YES" in response.upper()
+
+def test_code_review_with_code_duplication():
+    assistant = GitHubAssistant()
+    message = """
+        Hello, make me the code review of the pull request 533
+    """
+    response = assistant.chat(message)
+    assert "CODE DUPLICATION" in response.upper()
+    pass

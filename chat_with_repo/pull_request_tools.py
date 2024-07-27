@@ -16,6 +16,44 @@ from chat_with_repo.model import (
     State,
 )
 
+CODE_REVIEW_TEMPLATE = """
+You are an AI Assistant that’s an expert at reviewing pull requests. Review the below pull request that you receive.
+Input format
+- The input format follows Github diff format with addition and subtraction of code.
+- The + sign means that code has been added.
+- The - sign means that code has been removed.
+
+Instructions
+- Take into account that you don’t have access to the full code but only the code diff.
+- Only answer on what can be improved and provide the improvement in code. 
+- Answer in short form. 
+- Include code snippets if necessary.
+- Adhere to the languages code conventions.
+- For each suggestion include the file reference in order to make it easier for the user to understand where the change should be made.
+
+{diff}
+"""
+
+DESCRIBE_PULL_REQUEST_TEMPLATE = """
+You are an AI Assistant that’s an expert at reviewing pull requests. Review the below pull request that you receive.
+
+Input format
+- The input format follows Github diff format with addition and subtraction of code.
+- The + sign means that code has been added.
+- The - sign means that code has been removed.
+
+Instructions
+- Take into account that you don’t have access to the full code but only the code diff.
+- Produce a report with the following structure:
+    - Purpose:
+        a high level explanation of the pull request without going into the details of the changes because the aspect
+        will be faced in another section of the report
+    - Suggestions:
+        You have to provide all kinds of suggestions in order to improve the code quality, readability, and maintainability.
+
+{diff}
+"""
+
 
 class GetPullRequestByNumberSchema(BaseModel):
     number: int = Field(..., description="The number of the pull request.")
@@ -132,18 +170,42 @@ class GetPullRequestsTool(BaseTool):
         )[: self.topK]
 
 
-class DescribePullRequestChangeSchema(BaseModel):
+class CodeReviewSchema(BaseModel):
     number: int = Field(..., description="The pull request number.")
 
 
-class DescribePullRequestChangeTool(BaseTool):
-    args_schema: Type[BaseModel] = DescribePullRequestChangeSchema
+class CodeReviewTool(BaseTool):
+    args_schema: Type[BaseModel] = CodeReviewSchema
     state: State
-    name: str = "describe_pull_request_change"
-    description = "Describe the changes in a pull request by its number."
+    name: str = "code_review"
+    description = "Makes a code review of the pull request"
 
     def _run(self, number: int) -> str:
-        return get_diff(number = number, owner=self.state.repo.owner, repo=self.state.repo.value)
+
+        diff = get_diff(
+            number=number, owner=self.state.repo.owner, repo=self.state.repo.value
+        )
+
+        return CODE_REVIEW_TEMPLATE.format(diff=diff)
+
+
+class DescribePullRequestSchema(BaseModel):
+    number: int = Field(..., description="The number of the pull request.")
+
+
+class DescribePullRequestTool(BaseTool):
+    state: State
+    args_schema: Type[BaseModel] = DescribePullRequestSchema
+    name: str = "describe_pull_request"
+    description = "Describes the changes of a pull request."
+
+    def _run(self, number: int) -> str:
+
+        diff = get_diff(
+            number=number, owner=self.state.repo.owner, repo=self.state.repo.value
+        )
+
+        return DESCRIBE_PULL_REQUEST_TEMPLATE.format(diff=diff)
 
 
 def get_pull_request_by_number(

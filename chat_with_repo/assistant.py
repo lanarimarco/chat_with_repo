@@ -10,7 +10,8 @@ from chat_with_repo.commit_tools import (
 from chat_with_repo.misc_tools import SelectGitHubRepoTool
 from chat_with_repo.model import Repo, State
 from chat_with_repo.pull_request_tools import (
-    DescribePullRequestChangeTool,
+    CodeReviewTool,
+    DescribePullRequestTool,
     GetPullRequestByNumberTool,
     GetPullRequestsByCommitTool,
     GetPullRequestByPathTool,
@@ -30,6 +31,31 @@ from langchain_openai import ChatOpenAI
 from collections import deque
 
 from chat_with_repo.tag_tools import FindTagsByCommitTool
+
+
+SYSTEM_MESSAGE = f"""
+You are a virtual assistant that helps with GitHub-related tasks on the following repositories: {Repo.to_str()}.
+If in the user's question there is a reference to one of the reposotories shown above you must use the tool 'select_github_repo' 
+to select the repository the user work with and than select the tool related the user's question.
+Default repository is 'jariko'.
+For each task you must use one of the available tools.
+You must show to the user only the information retrieved by the tool, nothing more and nothing explanation except if the user asks for it.
+If you are not able to find the task related to the user's question, you must show to the user a message where you will show all tools available with a brief description.
+If the user asks if a <opened_from_branch> is merged into <target_branch>, you must answer by using tool: 'get_pull_requests' 
+passing the parameters achieved from the user question and in addition you have to pass the parameter state to all.
+
+If the user asks if there are pull requests to approve you have to search for pull requests that are in the status 'opened'.
+
+If the user asks if a pull request has been merged in a branch rather than in a tag you have to:
+    - search pr with the number provided by the user
+    - extact the commit sha from the pr
+    - and search for the commit in the branch or tag depends on the user's question
+
+If the user asks if a commit is in a branch you have:
+    - call 'get_pull_requests_by_commit' and retrieve information from the result
+    - if the previows tool does not return any pull request you have to call 'is_commit_in_base' and retrieve information from the result
+    
+"""
 
 
 class GitHubAssistant:
@@ -65,38 +91,7 @@ class GitHubAssistant:
         self.state = State()
         self.on_change_repo = on_change_repo
 
-    system = f"""
-    You are a virtual assistant that helps with GitHub-related tasks on the following repositories: {Repo.to_str()}.
-    If in the user's question there is a reference to one of the reposotories shown above you must use the tool 'select_github_repo' 
-    to select the repository the user work with and than select the tool related the user's question.
-    Default repository is 'jariko'.
-    For each task you must use one of the available tools.
-    You must show to the user only the information retrieved by the tool, nothing more and nothing explanation except if the user asks for it.
-    If you are not able to find the task related to the user's question, you must show to the user a message where you will show all tools available with a brief description.
-    If the user asks if a <opened_from_branch> is merged into <target_branch>, you must answer by using tool: 'get_pull_requests' 
-    passing the parameters achieved from the user question and in addition you have to pass the parameter state to all.
-    If the user asks if there are pull requests to approve you have to search for pull requests that are in the status 'opened'.
-    If the user asks if a pull request has been merged in a branch rather than in a tag you have to:
-     - search pr with the number provided by the user
-     - extact the commit sha from the pr
-     - and search for the commit in the branch or tag depends on the user's question
-    If the user asks for a code review or description for a given pull request:
-     - call the tool 'describe_pull_request_change'and use the result to produce a report with the following structure:
-        - Purpose:
-          a high level explanation of the pull request without going into the details of the changes because the aspect
-          will be faced in another section of the report
-        - Grade:  
-          what do you think about the changes in terms of quality of code, readability, and maintainability
-        - Conclusions:
-          You have to tell user If you think that there are some improvements and explains them, or if the suer approve this pr as it is 
-        - Details:
-          for each file show 
-            - the file path that has been changed
-            - a brief explanation of the changes for that file
-    If the user asks if a commit is in a branch you have:
-     - call 'get_pull_requests_by_commit' and retrieve information from the result
-     - if the previows tool does not return any pull request you have to call 'is_commit_in_base' and retrieve information from the result
-    """
+    system = SYSTEM_MESSAGE
     prompt = ChatPromptTemplate.from_messages(
         [
             ("system", system),
@@ -121,7 +116,8 @@ class GitHubAssistant:
                 GetPullRequestsTool(state=self.state, topK=self.topK),
                 GetPullRequestsByCommitTool(state=self.state, topK=self.topK),
                 GetPullRequestByPathTool(state=self.state, topK=self.topK),
-                DescribePullRequestChangeTool(state=self.state),
+                CodeReviewTool(state=self.state),
+                DescribePullRequestTool(state=self.state),
                 GetCommitByShaTool(state=self.state),
                 IsCommitInBaseTool(state=self.state),
                 GetCommitsByPathTool(state=self.state, topK=self.topK),
