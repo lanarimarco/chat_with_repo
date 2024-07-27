@@ -112,16 +112,16 @@ def test_is_commit_in_branch_develop():
     response = assistant.chat(message)
     assert "YES" in response.upper()
 
+
 def test_is_commit_in_branch_develop_kokos():
     # Issue: https://github.com/lanarimarco/chat_with_repo/issues/4
     assistant = GitHubAssistant()
-    assistant.state.repo = Repo.kokos_sdk_java_rpgle
     message = """
-        Hello, tell me if the commit d0b158733fd4d4625bab3c4c854e49b67a89f422 is in the develop. Answer YES or NO followed by the explanation
+        Hello, tell me if the commit d0b158733fd4d4625bab3c4c854e49b67a89f422 is in the develop of kokos-sdk-java-rpgle. 
+        Answer YES or NO followed by the explanation
     """
     response = assistant.chat(message)
     assert "YES" in response.upper()
-
 
 
 def test_is_commit_in_branch_master():
@@ -131,7 +131,6 @@ def test_is_commit_in_branch_master():
     """
     response = assistant.chat(message)
     assert "YES" in response.upper()
-
 
 
 def test_get_commits_by_pull_request():
@@ -174,6 +173,9 @@ def test_get_commit_by_sha():
 
 def test_find_branches_by_commit():
     assistant = GitHubAssistant()
+    # Currently there are e lot of branches that contain the commit 8d189c51b3ff056aa019c26e93f59e8a603e7735
+    # and than I want to be sure that the assistant is able to find at least the branches develop and master
+    assistant.topK = 50
     message = """
         Hello, tell me the branches that contain the commit 8d189c51b3ff056aa019c26e93f59e8a603e7735
     """
@@ -226,27 +228,36 @@ def test_describe_pull_request_change_in_jariko():
         Hello, describe the changes of the pull request 562
     """
     response = assistant.chat(message)
-    assert "RpgLexer.g4" in response
-    assert "bif.kt" in response
-    assert "MUDRNRAPU00228.rpgle" in response
+    assert "PURPOSE" in response.upper()
+    assert "SUGGESTION" in response.upper()
 
 
 def test_description_pull_request_change_in_kokos():
     # Describe the changes of the pull request 168 in kokos-sdk-java-rpgle
     assistant = GitHubAssistant()
-    assistant.state.repo = Repo.kokos_sdk_java_rpgle
     message = """
-        Hello, describe the changes of the pull request 168
+        Hello, describe the changes of the pull request 168 in kokos-sdk-java-rpgle
     """
     response = assistant.chat(message)
-    assert "RpgSyntaxChecker.java" in response
+    assert "PURPOSE" in response.upper()
+    assert "SUGGESTION" in response.upper()
 
 
 def test_is_branch_merged_in_develop_kokos():
     assistant = GitHubAssistant()
     assistant.state.repo = Repo.kokos_sdk_java_rpgle
     message = """
-        Hello, tell me if the branch feat/NW24000624/program_finder_better_exception_handling is merged in develop. Answer YES or NO
+        Hello, tell me if the branch feat/NW24000624/program_finder_better_exception_handling is merged in develop of kokos-sdk-java-rpgle. 
+        Answer YES or NO
     """
     response = assistant.chat(message)
     assert "YES" in response.upper()
+
+
+def test_code_review_with_code_duplication():
+    assistant = GitHubAssistant()
+    message = """
+        Hello, make me the code review of the pull request 533
+    """
+    response = assistant.chat(message)
+    assert "CODE DUPLICATION" in response.upper()

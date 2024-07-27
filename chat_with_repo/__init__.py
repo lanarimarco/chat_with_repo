@@ -26,6 +26,7 @@ AUTHORAZED_USERS = os.getenv("AUTHORIZED_USERS")
 
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
+MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o-mini")
 
 ## Validation
 
@@ -45,4 +46,9 @@ if not os.path.exists(CLIENT_SECRET_PATH):
 if not AUTHORAZED_USERS:
     raise Exception(
         "Wrong authorized users settings. AUTHORIZED_USERS environment variable is not set."
+    )
+
+if not MODEL_NAME:
+    raise Exception(
+        "Wrong model settings. MODEL_NAME environment variable is not set."
     )
