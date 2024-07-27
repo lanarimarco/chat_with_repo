@@ -30,6 +30,7 @@ Instructions
 - Answer in short form. 
 - Include code snippets if necessary.
 - Adhere to the languages code conventions.
+- For each suggestion include the file reference in order to make it easier for the user to understand where the change should be made.
 """
 
 DESCRIBE_PULL_REQUEST_TEMPLATE = """
