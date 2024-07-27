@@ -52,5 +52,4 @@ Instructions
     - Suggestions:
         You have to provide all kinds of suggestions in order to improve the code quality, readability, and maintainability.
 
-{diff}
 """

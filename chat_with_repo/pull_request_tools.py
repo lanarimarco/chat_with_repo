@@ -171,6 +171,7 @@ class DescribePullRequestTool(BaseTool):
     args_schema: Type[BaseModel] = DescribePullRequestSchema
     name: str = "describe_pull_request"
     description = "Describes the changes of a pull request."
+    return_direct = True
 
     def _run(self, number: int) -> str:
 
@@ -178,7 +179,12 @@ class DescribePullRequestTool(BaseTool):
             number=number, owner=self.state.repo.owner, repo=self.state.repo.value
         )
 
-        return DESCRIBE_PULL_REQUEST_TEMPLATE.format(diff=diff)
+        llm = ChatOpenAI(model=MODEL_NAME, api_key=OPENAI_API_KEY)
+        prompt = ChatPromptTemplate.from_messages(
+            [("system", DESCRIBE_PULL_REQUEST_TEMPLATE), ("user", "{diff}")]
+        )
+        chain = prompt | llm
+        return chain.invoke({"diff": diff}).content
 
 
 # This tool is into this module to avoid circular imports
