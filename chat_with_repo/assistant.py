@@ -88,10 +88,9 @@ class GitHubAssistant:
         self.state = State()
         self.on_change_repo = on_change_repo
 
-    system = SYSTEM_MESSAGE
     prompt = ChatPromptTemplate.from_messages(
         [
-            ("system", system),
+            ("system", SYSTEM_MESSAGE),
             MessagesPlaceholder("chat_history", optional=True),
             ("human", "{input}"),
             MessagesPlaceholder("agent_scratchpad"),
