@@ -26,6 +26,7 @@ AUTHORAZED_USERS = os.getenv("AUTHORIZED_USERS")
 
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
+MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o-mini")
 
 ## Validation
 
