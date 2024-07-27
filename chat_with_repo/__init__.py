@@ -47,3 +47,8 @@ if not AUTHORAZED_USERS:
     raise Exception(
         "Wrong authorized users settings. AUTHORIZED_USERS environment variable is not set."
     )
+
+if not MODEL_NAME:
+    raise Exception(
+        "Wrong model settings. MODEL_NAME environment variable is not set."
+    )
