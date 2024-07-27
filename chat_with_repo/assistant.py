@@ -1,5 +1,5 @@
 from typing import Callable
-from chat_with_repo import OPENAI_API_KEY
+from chat_with_repo import MODEL_NAME, OPENAI_API_KEY
 from chat_with_repo.branch_tools import FindBranchesByCommitTool
 from chat_with_repo.commit_tools import (
     GetCommitByShaTool,
@@ -61,7 +61,7 @@ class GitHubAssistant:
         self,
         owner: str = "smeup",
         repo: str = "jariko",
-        model: str = "gpt-4o-mini",
+        model: str = MODEL_NAME,
         chat_history_length: int = 10,
         topK: int = 10,
         on_change_repo: Callable[[str], None] = None,
