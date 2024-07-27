@@ -7,12 +7,11 @@ from typing import Callable, List, Optional, Tuple, Type
 import requests
 
 from chat_with_repo import GITHUB_TOKEN
-from chat_with_repo.commit_tools import get_commits_by_path
+from chat_with_repo.commit_tools import get_commits_by_path, is_commit_in_base
 from chat_with_repo.model import (
     PullRequest,
     PullRequestState,
     PullRequestFilter,
-    Repo,
     State,
 )
 
@@ -29,7 +28,6 @@ Instructions
 - Answer in short form. 
 - Include code snippets if necessary.
 - Adhere to the languages code conventions.
-- For each suggestion include the file reference in order to make it easier for the user to understand where the change should be made.
 
 {diff}
 """
@@ -206,6 +204,37 @@ class DescribePullRequestTool(BaseTool):
         )
 
         return DESCRIBE_PULL_REQUEST_TEMPLATE.format(diff=diff)
+
+
+# This tool is into this module to avoid circular imports
+class IsCommitInBranchSchema(BaseModel):
+    commit_sha: str = Field(..., description="The commit SHA.")
+    branch: str = Field(..., description="The branch name.")
+
+
+class IsCommitInBranchTool(BaseTool):
+    state: State
+    args_schema: Type[BaseModel] = IsCommitInBranchSchema
+    name: str = "is_commit_in_branch"
+    description = "Verifies if a commit is in a branch."
+
+    def _run(self, commit_sha: str, branch: str) -> bool:
+        pull_requests_by_commit = get_pull_requests_by_commit(
+            commit_sha=commit_sha,
+            owner=self.state.repo.owner,
+            repo=self.state.repo.value,
+        )
+        if len(pull_requests_by_commit) > 0:
+            return True
+        return is_commit_in_base(
+            commit_sha=commit_sha,
+            base=branch,
+            owner=self.state.repo.owner,
+            repo=self.state.repo.value,
+        )
+
+
+##########################################################################
 
 
 def get_pull_request_by_number(

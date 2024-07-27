@@ -15,6 +15,7 @@ from chat_with_repo.pull_request_tools import (
     GetPullRequestByNumberTool,
     GetPullRequestsByCommitTool,
     GetPullRequestByPathTool,
+    IsCommitInBranchTool,
 )
 from chat_with_repo.pull_request_tools import (
     GetPullRequestsTool,
@@ -50,10 +51,6 @@ If the user asks if a pull request has been merged in a branch rather than in a 
     - search pr with the number provided by the user
     - extact the commit sha from the pr
     - and search for the commit in the branch or tag depends on the user's question
-
-If the user asks if a commit is in a branch you have:
-    - call 'get_pull_requests_by_commit' and retrieve information from the result
-    - if the previows tool does not return any pull request you have to call 'is_commit_in_base' and retrieve information from the result
     
 """
 
@@ -119,6 +116,7 @@ class GitHubAssistant:
                 CodeReviewTool(state=self.state),
                 DescribePullRequestTool(state=self.state),
                 GetCommitByShaTool(state=self.state),
+                IsCommitInBranchTool(state=self.state),
                 IsCommitInBaseTool(state=self.state),
                 GetCommitsByPathTool(state=self.state, topK=self.topK),
                 GetCommitsByPullRequestTool(state=self.state, topK=self.topK),
@@ -132,7 +130,10 @@ class GitHubAssistant:
         agent = create_openai_tools_agent(llm, tools, self.prompt)
         agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
         agent_response = agent_executor.invoke(
-            input={"input": message, "chat_history": list(self.chat_history)}
+            input={
+                "input": message.strip(),
+                "chat_history": [msg.content.strip() for msg in self.chat_history],
+            }
         )
         self.chat_history.append(HumanMessage(content=agent_response["input"]))
         self.chat_history.append(AIMessage(content=agent_response["output"]))
