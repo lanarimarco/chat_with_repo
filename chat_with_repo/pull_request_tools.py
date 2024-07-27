@@ -1,12 +1,14 @@
 from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_core.tools import BaseTool
+from langchain_core.prompts import ChatPromptTemplate
 
 
 from typing import Callable, List, Optional, Tuple, Type
 
+from langchain_openai import ChatOpenAI
 import requests
 
-from chat_with_repo import GITHUB_TOKEN
+from chat_with_repo import GITHUB_TOKEN, MODEL_NAME, OPENAI_API_KEY
 from chat_with_repo.commit_tools import get_commits_by_path, is_commit_in_base
 from chat_with_repo.model import (
     PullRequest,
@@ -28,8 +30,6 @@ Instructions
 - Answer in short form. 
 - Include code snippets if necessary.
 - Adhere to the languages code conventions.
-
-{diff}
 """
 
 DESCRIBE_PULL_REQUEST_TEMPLATE = """
@@ -177,6 +177,7 @@ class CodeReviewTool(BaseTool):
     state: State
     name: str = "code_review"
     description = "Makes a code review of the pull request"
+    return_direct = True
 
     def _run(self, number: int) -> str:
 
@@ -184,7 +185,12 @@ class CodeReviewTool(BaseTool):
             number=number, owner=self.state.repo.owner, repo=self.state.repo.value
         )
 
-        return CODE_REVIEW_TEMPLATE.format(diff=diff)
+        llm = ChatOpenAI(model=MODEL_NAME, api_key=OPENAI_API_KEY)
+        prompt = ChatPromptTemplate.from_messages(
+            [("system", CODE_REVIEW_TEMPLATE), ("user", "{diff}")]
+        )
+        chain = prompt | llm
+        return chain.invoke({"diff": diff}).content
 
 
 class DescribePullRequestSchema(BaseModel):
