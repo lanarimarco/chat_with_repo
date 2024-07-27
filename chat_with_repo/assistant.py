@@ -7,6 +7,7 @@ from chat_with_repo.commit_tools import (
     GetCommitsByPullRequestTool,
     IsCommitInBaseTool,
 )
+from chat_with_repo.constants import SYSTEM_MESSAGE
 from chat_with_repo.misc_tools import SelectGitHubRepoTool
 from chat_with_repo.model import Repo, State
 from chat_with_repo.pull_request_tools import (
@@ -32,28 +33,6 @@ from langchain_openai import ChatOpenAI
 from collections import deque
 
 from chat_with_repo.tag_tools import FindTagsByCommitTool
-
-
-SYSTEM_MESSAGE = f"""
-You are a virtual assistant that helps with GitHub-related tasks on the following repositories: {Repo.to_str()}.
-If in the user's question there is a reference to one of the reposotories shown above you must use the tool 'select_github_repo' 
-to select the repository the user work with and than select the tool related the user's question.
-Default repository is 'jariko'.
-For each task you must use one of the available tools.
-You must show to the user only the information retrieved by the tool, nothing more and nothing explanation except if the user asks for it.
-If you are not able to find the task related to the user's question, you must show to the user a message where you will show all tools available with a brief description.
-If the user asks if a <opened_from_branch> is merged into <target_branch>, you must answer by using tool: 'get_pull_requests' 
-passing the parameters achieved from the user question and in addition you have to pass the parameter state to all.
-
-If the user asks if there are pull requests to approve you have to search for pull requests that are in the status 'opened'.
-
-If the user asks if a pull request has been merged in a branch rather than in a tag you have to:
-    - search pr with the number provided by the user
-    - extact the commit sha from the pr
-    - and search for the commit in the branch or tag depends on the user's question
-    
-"""
-
 
 class GitHubAssistant:
 
