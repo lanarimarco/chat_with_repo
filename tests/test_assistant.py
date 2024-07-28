@@ -254,10 +254,11 @@ def test_is_branch_merged_in_develop_kokos():
     assert "YES" in response.upper()
 
 
-def test_code_review_with_code_duplication():
+def test_code_review_format():
     assistant = GitHubAssistant()
     message = """
         Hello, make me the code review of the pull request 533
     """
     response = assistant.chat(message)
-    assert "CODE DUPLICATION" in response.upper()
+    assert "RpgLexer.g4" in response
+    assert "https://github.com/smeup/jariko/pull/533/files#diff-6bc75f88ee4e9b63826431240cef9dbf4b18c10af9394f2b738908e9964e77d1" in response
