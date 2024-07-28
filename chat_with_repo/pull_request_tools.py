@@ -16,6 +16,7 @@ from chat_with_repo.commit_tools import (
     is_commit_in_base,
 )
 from chat_with_repo.constants import (
+    CODE_REVIEW_SYSTEM_MESSAGE,
     CODE_REVIEW_TEMPLATE,
     DESCRIBE_PULL_REQUEST_TEMPLATE,
 )
@@ -160,8 +161,13 @@ class CodeReviewTool(BaseTool):
             number=number, owner=self.state.repo.owner, repo=self.state.repo.value
         )
 
-        description = pull_request.title + " - " + pull_request.body
+        title = pull_request.title
+        body = "" if pull_request.body is None else pull_request.body
 
+        description = f"""
+        Title: {title} 
+        Body: {body}
+"""
         commits = get_commits_by_pull_request(
             number=number, owner=self.state.repo.owner, repo=self.state.repo.value
         )
@@ -181,10 +187,13 @@ class CodeReviewTool(BaseTool):
             )
 
         llm = ChatOpenAI(model=MODEL_NAME, api_key=OPENAI_API_KEY)
-        prompt = ChatPromptTemplate.from_messages([("user", CODE_REVIEW_TEMPLATE)])
+        prompt = ChatPromptTemplate.from_messages(
+            [("system", CODE_REVIEW_SYSTEM_MESSAGE), ("user", CODE_REVIEW_TEMPLATE)]
+        )
         chain = prompt | llm
         return chain.invoke(
             {
+                "input": self.state.messages[-1].content,
                 "description": description,
                 "diff": diff,
                 "commits": commits,

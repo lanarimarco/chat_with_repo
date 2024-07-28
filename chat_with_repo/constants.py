@@ -21,12 +21,12 @@ If the user asks if a pull request has been merged in a branch rather than in a 
     
 """
 
-CODE_REVIEW_TEMPLATE = """
+CODE_REVIEW_SYSTEM_MESSAGE = """
 You are an AI Assistant that’s an expert at reviewing pull requests. Review the pull request that you receive.
 
 
-Given the CONTEXT_INFORMATION below:
-From the COMMITS section summary the changes and checks if the summary adheres to the DESCRIPTION.
+Given the CONTEXT_INFORMATION follow these instructions:
+Check if the DESCRIPTION contains title and body and if title and body adhere to the comments in in the COMMITS section.
 Analize file by file and for each file you will provide:
 - the name of the file containing in the diff changes and the link to view the diff.
 - a high level description of the changes made in that file.
@@ -35,9 +35,14 @@ Analize file by file and for each file you will provide:
 - include code snippets if necessary.
 - adhere to the languages code conventions.
 
+"""
+
+CODE_REVIEW_TEMPLATE = """
+
+{input}
 
 CONTEXT_INFORMATION
-DESCRIPTION: containing the description of the pull request
+DESCRIPTION: containing title and body of the pull request
 {description}
 ===
 
@@ -52,7 +57,6 @@ COMMITS: list of commits that are part of the pull request
 LINKS_DIFF: link to view the diff for each file changed in the pull request
 {links_diff}
 ===
-
 """
 
 DESCRIBE_PULL_REQUEST_TEMPLATE = """

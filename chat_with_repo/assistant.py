@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, List
 from chat_with_repo import MODEL_NAME, OPENAI_API_KEY
 from chat_with_repo.branch_tools import FindBranchesByCommitTool
 from chat_with_repo.commit_tools import (
@@ -9,7 +9,7 @@ from chat_with_repo.commit_tools import (
 )
 from chat_with_repo.constants import SYSTEM_MESSAGE
 from chat_with_repo.misc_tools import SelectGitHubRepoTool
-from chat_with_repo.model import Repo, State
+from chat_with_repo.model import State
 from chat_with_repo.pull_request_tools import (
     CodeReviewTool,
     DescribePullRequestTool,
@@ -24,7 +24,7 @@ from chat_with_repo.pull_request_tools import (
 
 
 from langchain.agents import AgentExecutor, create_openai_tools_agent
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import AIMessage, HumanMessage, BaseMessage
 from langchain_core.prompts.chat import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
@@ -62,7 +62,7 @@ class GitHubAssistant:
         if not model:
             raise ValueError("model must be specified")
         self.model = model
-        self.chat_history = deque(maxlen=chat_history_length)
+        self.chat_history: List[BaseMessage] = deque(maxlen=chat_history_length)
         self.topK = topK
         self.state = State()
         self.on_change_repo = on_change_repo
@@ -107,6 +107,7 @@ class GitHubAssistant:
             ]
         agent = create_openai_tools_agent(llm, tools, self.prompt)
         agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+        self.state.messages = self.chat_history + deque([HumanMessage(content=message.strip())])
         agent_response = agent_executor.invoke(
             input={
                 "input": message.strip(),

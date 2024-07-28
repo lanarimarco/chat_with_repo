@@ -262,3 +262,11 @@ def test_code_review_format():
     response = assistant.chat(message)
     assert "RpgLexer.g4" in response
     assert "https://github.com/smeup/jariko/pull/533/files#diff-6bc75f88ee4e9b63826431240cef9dbf4b18c10af9394f2b738908e9964e77d1" in response
+
+def test_code_review_with_not_explicative_description():
+    assistant = GitHubAssistant()
+    message = """
+        make me the code review of 21 in chat with repo and if body is not explicative you have stop code review and answer only: Body not explicative
+    """
+    response = assistant.chat(message)
+    assert "Body not explicative" in response
