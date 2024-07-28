@@ -20,21 +20,41 @@ If the user asks if a pull request has been merged in a branch rather than in a 
     - and search for the commit in the branch or tag depends on the user's question
     
 """
-CODE_REVIEW_TEMPLATE = """
-You are an AI Assistant that’s an expert at reviewing pull requests. Review the below pull request that you receive.
-Input format
-- The input format follows Github diff format with addition and subtraction of code.
-- The + sign means that code has been added.
-- The - sign means that code has been removed.
 
-Instructions
-- Take into account that you don’t have access to the full code but only the code diff.
-- Only answer on what can be improved and provide the improvement in code. 
-- Answer in short form. 
-- Include code snippets if necessary.
-- Adhere to the languages code conventions.
-- For each suggestion include the file reference in order to make it easier for the user to understand where the change should be made.
+CODE_REVIEW_TEMPLATE = """
+You are an AI Assistant that’s an expert at reviewing pull requests. Review the pull request that you receive.
+
+
+Given the CONTEXT_INFORMATION below:
+From the COMMITS section summary the changes and checks if the summary adheres to the DESCRIPTION.
+Analize file by file and for each file you will provide:
+- the name of the file containing in the diff changes and the link to view the diff.
+- a high level description of the changes made in that file.
+- only answer on what can be improved and provide the improvement in code. 
+- answer in short form. 
+- include code snippets if necessary.
+- adhere to the languages code conventions.
+
+
+CONTEXT_INFORMATION
+DESCRIPTION: containing the description of the pull request
+{description}
+===
+
+DIFF: containing the diff of the pull request where the + sign means that code has been added and the - sign means that code has been removed
+{diff}
+===
+
+COMMITS: list of commits that are part of the pull request
+{commits}
+===
+
+LINKS_DIFF: link to view the diff for each file changed in the pull request
+{links_diff}
+===
+
 """
+
 DESCRIBE_PULL_REQUEST_TEMPLATE = """
 You are an AI Assistant that’s an expert at reviewing pull requests. Review the below pull request that you receive.
 
