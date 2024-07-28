@@ -92,6 +92,13 @@ class Commit(BaseModel):
     html_url: str
     commit: CommitDetail
 
+class FileChange(BaseModel):
+    filename: str
+    status: str
+    additions: int
+    deletions: int
+    changes: int
+
 
 class CommitFilter(BaseModel):
     """
