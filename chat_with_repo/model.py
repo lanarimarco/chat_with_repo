@@ -1,13 +1,14 @@
 from datetime import datetime
-from typing import Callable, Optional
+from typing import Callable, List, Optional
 from pydantic import BaseModel
 from enum import Enum
+from langchain_core.messages import BaseMessage
 
 
 class Repo(Enum):
 
     chat_with_repo = "chat_with_repo"
-    
+
     jariko = "jariko"
     jardis = "jardis"
     ketchup = "ketchup"
@@ -17,7 +18,6 @@ class Repo(Enum):
     reload = "reload"
     webup_project = "webup-project"
     webup_js = "webup.js"
-    
 
     @property
     def owner(self):
@@ -25,16 +25,23 @@ class Repo(Enum):
             return "lanarimarco"
         else:
             return "smeup"
-    
+
     @staticmethod
-    def to_str(): 
-        return ', '.join([member.value for member in Repo])
+    def to_str():
+        return ", ".join([member.value for member in Repo])
 
 
 class State:
-    def __init__(self, repo: Repo = Repo.jariko):
+    def __init__(self, repo: Repo = Repo.jariko, messages: List[BaseMessage] = []):
+        """Initializes a new instance of the State
+
+        Args:
+            repo (Repo, optional): The repository. Defaults to Repo.jariko.
+            messages (List[BaseMessage], optional): The messages at agent execution time (before the agent is invoked). Defaults to [].
+        """
         self._repo: Repo = repo
         self.on_change_repo: Callable[[Repo], None] = None
+        self.messages: List[BaseMessage] = messages
 
     def is_repo_selected(self):
         return self.repo is not None
@@ -91,6 +98,14 @@ class Commit(BaseModel):
     sha: str
     html_url: str
     commit: CommitDetail
+
+
+class FileChange(BaseModel):
+    filename: str
+    status: str
+    additions: int
+    deletions: int
+    changes: int
 
 
 class CommitFilter(BaseModel):

@@ -9,7 +9,9 @@ from chat_with_repo.commit_tools import (
     is_commit_in_base,
 )
 from chat_with_repo.pull_request_tools import (
+    generate_github_diff_url_in_pull_request,
     get_diff,
+    get_files_changed_in_pull_request,
     get_pull_request_by_number,
     get_pull_requests,
     get_pull_requests_by_commit,
@@ -297,9 +299,12 @@ def test_is_commit_in_branch():
     # is_commit_in_base does not provide expected results becasue the branches are in diverged status
     base = "develop"
     commit_sha = "d0b158733fd4d4625bab3c4c854e49b67a89f422"
-    assert is_commit_in_base(
-        commit_sha=commit_sha, base=base, owner="smeup", repo="kokos-sdk-java-rpgle"
-    ) == False
+    assert (
+        is_commit_in_base(
+            commit_sha=commit_sha, base=base, owner="smeup", repo="kokos-sdk-java-rpgle"
+        )
+        == False
+    )
 
 
 def test_get_commit_by_sha():
@@ -398,3 +403,29 @@ def test_get_diff_webupjs():
     diff = get_diff(number=number, owner="smeup", repo="webup.js")
     assert "cypress/e2e/components/smeup/for/for.cy.ts" in diff
     assert "jest/unit/managers/converters/utilities/dataToJ5.test.ts" in diff
+
+
+def test_get_files_changed_in_pull_request():
+    owner = "smeup"
+    repo = "jariko"
+    number = 577
+    files = get_files_changed_in_pull_request(number=number, owner=owner, repo=repo)
+    assert len(files) == 9
+    assert (
+        files[0].filename
+        == "rpgJavaInterpreter-core/src/main/kotlin/com/smeup/rpgparser/interpreter/compile_time_interpreter.kt"
+    )
+
+
+def test_generate_github_diff_url_in_pull_request():
+    owner = "smeup"
+    repo = "jariko"
+    number = 577
+    file_path = "rpgJavaInterpreter-core/src/main/kotlin/com/smeup/rpgparser/interpreter/compile_time_interpreter.kt"
+    diff_url = generate_github_diff_url_in_pull_request(
+        number=number, file_path=file_path, owner=owner, repo=repo
+    )
+    assert (
+        diff_url
+        == "https://github.com/smeup/jariko/pull/577/files#diff-f7be7d0ccf3fd32828f9fc29ae1689e278c2f9ce6801212356ac43721946d12c"
+    )

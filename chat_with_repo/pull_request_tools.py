@@ -7,14 +7,21 @@ from typing import Callable, List, Optional, Tuple, Type
 
 from langchain_openai import ChatOpenAI
 import requests
+import hashlib
 
 from chat_with_repo import GITHUB_TOKEN, MODEL_NAME, OPENAI_API_KEY
-from chat_with_repo.commit_tools import get_commits_by_path, is_commit_in_base
+from chat_with_repo.commit_tools import (
+    get_commits_by_path,
+    get_commits_by_pull_request,
+    is_commit_in_base,
+)
 from chat_with_repo.constants import (
+    CODE_REVIEW_SYSTEM_MESSAGE,
     CODE_REVIEW_TEMPLATE,
     DESCRIBE_PULL_REQUEST_TEMPLATE,
 )
 from chat_with_repo.model import (
+    FileChange,
     PullRequest,
     PullRequestState,
     PullRequestFilter,
@@ -150,16 +157,49 @@ class CodeReviewTool(BaseTool):
 
     def _run(self, number: int) -> str:
 
+        pull_request = get_pull_request_by_number(
+            number=number, owner=self.state.repo.owner, repo=self.state.repo.value
+        )
+
+        title = pull_request.title
+        body = "" if pull_request.body is None else pull_request.body
+
+        description = f"""
+        Title: {title} 
+        Body: {body}
+"""
+        commits = get_commits_by_pull_request(
+            number=number, owner=self.state.repo.owner, repo=self.state.repo.value
+        )
+
         diff = get_diff(
             number=number, owner=self.state.repo.owner, repo=self.state.repo.value
         )
 
+        files_changed_in_pull_request = get_files_changed_in_pull_request(
+            number=number, owner=self.state.repo.owner, repo=self.state.repo.value
+        )
+
+        links_diff: dict[str, str] = {}
+        for file in files_changed_in_pull_request:
+            links_diff[file.filename] = generate_github_diff_url_in_pull_request(
+                number, file.filename, self.state.repo.owner, self.state.repo.value
+            )
+
         llm = ChatOpenAI(model=MODEL_NAME, api_key=OPENAI_API_KEY)
         prompt = ChatPromptTemplate.from_messages(
-            [("system", CODE_REVIEW_TEMPLATE), ("user", "{diff}")]
+            [("system", CODE_REVIEW_SYSTEM_MESSAGE), ("user", CODE_REVIEW_TEMPLATE)]
         )
         chain = prompt | llm
-        return chain.invoke({"diff": diff}).content
+        return chain.invoke(
+            {
+                "input": self.state.messages[-1].content,
+                "description": description,
+                "diff": diff,
+                "commits": commits,
+                "links_diff": links_diff,
+            }
+        ).content
 
 
 class DescribePullRequestSchema(BaseModel):
@@ -500,6 +540,78 @@ def get_diff(number: int, owner: str = "smeup", repo: str = "jariko") -> str:
         return response.text
     else:
         raise Exception(f"Error: {response.status_code} - {response.text}")
+
+
+def generate_diff_hash(file_path: str) -> str:
+    """
+    Generates a diff hash for a given file path.
+
+    Args:
+        file_path (str): The path of the file within the repository.
+
+    Returns:
+        str: The generated diff hash.
+    """
+    sha = hashlib.sha256()
+    sha.update(file_path.encode("utf-8"))
+    return sha.hexdigest()
+
+
+def generate_github_diff_url_in_pull_request(
+    number: int, file_path: str, owner: str = "smeup", repo: str = "jariko"
+) -> str:
+    """
+    Generates a GitHub diff URL for a specific file in a pull request.
+
+    Args:
+        owner (str): The owner of the repository.
+        repo (str): The name of the repository.
+        number (int): The number of the pull request.
+        file_path (str): The path of the file within the repository.
+
+    Returns:
+        str: The generated GitHub diff URL.
+    """
+    base_url = f"https://github.com/{owner}/{repo}/pull/{number}/files"
+    diff_hash = generate_diff_hash(file_path)
+    return f"{base_url}#diff-{diff_hash}"
+
+
+def get_files_changed_in_pull_request(
+    number: int, owner: str = "smeup", repo: str = "jariko"
+) -> List[FileChange]:
+    """
+    Retrieves the list of files changed in a given pull request.
+
+    Args:
+        number (int): The number of the pull request.
+        owner (str, optional): The owner of the repository. Defaults to "smeup".
+        repo (str, optional): The name of the repository. Defaults to "jariko".
+
+    Returns:
+        List[FileChange]: A list of FileChange objects representing the files changed in the pull request.
+    """
+    url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{number}/files"
+    headers = {
+        "Accept": "application/vnd.github.v3+json",
+        "Authorization": f"token {GITHUB_TOKEN}",
+    }
+    params = {
+        "per_page": 100,
+    }
+
+    nextUrl = url
+    files_changed = []
+    response = requests.get(url, headers=headers, params=params)
+    while nextUrl:
+        if response.status_code == 200:
+            nextUrl = response.links.get("next", {}).get("url")
+            files_changed += [
+                FileChange.model_validate(file) for file in response.json()
+            ]
+        else:
+            raise Exception(f"Error: {response.status_code} - {response.text}")
+    return files_changed
 
 
 def __extract_only_useful_information(text: str) -> str:
