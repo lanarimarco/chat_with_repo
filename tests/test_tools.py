@@ -230,6 +230,17 @@ def test_get_commits_by_pull_request():
     )
 
 
+def test_get_commits_by_pull_request_filter_all():
+    # Test case 1: Verify that the commits are returned correctly
+    owner = "smeup"
+    repo = "jariko"
+    number = 554
+    commits = get_commits_by_pull_request(
+        number=number, owner=owner, repo=repo, filter=lambda commit: False
+    )
+    assert len(commits) == 0
+
+
 def test_compare_commits():
     # Test case 1: Verify that the commits are returned correctly
     owner = "smeup"
