@@ -178,12 +178,21 @@ def get_commits_by_pull_request(
         "Accept": "application/vnd.github.v3+json",
         "Authorization": f"token {GITHUB_TOKEN}",
     }
-
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        return [Commit.model_validate(commit) for commit in response.json()]
-    else:
-        raise Exception(f"Error: {response.status_code} - {response.text}")
+    params = {
+        "per_page": 100,
+    }
+    nextUrl = url
+    commits = []
+    while nextUrl:
+        response = requests.get(nextUrl, headers=headers, params=params)
+        if response.status_code == 200:
+            nextUrl = response.links.get("next", {}).get("url")
+            # Process the commits as needed
+            for commit in response.json():
+                commits.append(Commit.model_validate(commit))
+        else:
+            raise Exception(f"Error: {response.status_code} - {response.text}")
+    return commits
 
 
 # https://docs.github.com/rest/commits/commits#compare-two-commits
