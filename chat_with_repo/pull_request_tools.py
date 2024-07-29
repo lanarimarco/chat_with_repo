@@ -578,7 +578,10 @@ def generate_github_diff_url_in_pull_request(
 
 
 def get_files_changed_in_pull_request(
-    number: int, owner: str = "smeup", repo: str = "jariko"
+    number: int,
+    owner: str = "smeup",
+    repo: str = "jariko",
+    filter_file_change: Callable[[FileChange], bool] = lambda file_change: True,
 ) -> List[FileChange]:
     """
     Retrieves the list of files changed in a given pull request.
@@ -587,6 +590,7 @@ def get_files_changed_in_pull_request(
         number (int): The number of the pull request.
         owner (str, optional): The owner of the repository. Defaults to "smeup".
         repo (str, optional): The name of the repository. Defaults to "jariko".
+        filter_file_change (Callable[[FileChange], bool], optional): A function to filter the file changes. Defaults to lambda file_change: True means no filter.
 
     Returns:
         List[FileChange]: A list of FileChange objects representing the files changed in the pull request.
@@ -606,9 +610,12 @@ def get_files_changed_in_pull_request(
     while nextUrl:
         if response.status_code == 200:
             nextUrl = response.links.get("next", {}).get("url")
-            files_changed += [
-                FileChange.model_validate(file) for file in response.json()
+            current_files_changed = [
+                FileChange.model_validate(file)
+                for file in response.json()
+                if filter_file_change(file)
             ]
+            files_changed += current_files_changed
         else:
             raise Exception(f"Error: {response.status_code} - {response.text}")
     return files_changed

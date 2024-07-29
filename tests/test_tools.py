@@ -417,6 +417,16 @@ def test_get_files_changed_in_pull_request():
     )
 
 
+def test_get_files_changed_in_pull_request_exlude_all():
+    owner = "smeup"
+    repo = "jariko"
+    number = 577
+    files = get_files_changed_in_pull_request(
+        number=number, owner=owner, repo=repo, filter_file_change=lambda x: False
+    )
+    assert len(files) == 0
+
+
 def test_generate_github_diff_url_in_pull_request():
     owner = "smeup"
     repo = "jariko"
