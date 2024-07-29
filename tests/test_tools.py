@@ -422,7 +422,7 @@ def test_get_files_changed_in_pull_request_exlude_all():
     repo = "jariko"
     number = 577
     files = get_files_changed_in_pull_request(
-        number=number, owner=owner, repo=repo, filter_file_change=lambda x: False
+        number=number, owner=owner, repo=repo, filter=lambda x: False
     )
     assert len(files) == 0
 
