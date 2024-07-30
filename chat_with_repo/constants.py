@@ -34,7 +34,10 @@ Analize file by file and for each file you will provide:
 - answer in short form. 
 - include code snippets if necessary.
 - adhere to the languages code conventions.
+- if a file is huge its reference will be in the EXCLUDED_LINKS_DIFF section, in this case show only the link to view the diff inform 
+that the file is huge and that the user can view the diff by clicking on the link.
 
+Finaly you have to assess overall the pull request and answer: "ready_to_merge" or "not_ready_to_merge".
 """
 
 CODE_REVIEW_TEMPLATE = """
@@ -56,6 +59,10 @@ COMMITS: list of commits that are part of the pull request
 
 LINKS_DIFF: link to view the diff for each file changed in the pull request
 {links_diff}
+===
+
+EXCLUDED_LINKS_DIFF: link to view the diff for each file excluded from the review because huge
+{excluded_links_diff}
 ===
 """
 
