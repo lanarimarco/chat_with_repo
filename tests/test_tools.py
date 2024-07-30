@@ -9,6 +9,7 @@ from chat_with_repo.commit_tools import (
     is_commit_in_base,
 )
 from chat_with_repo.pull_request_tools import (
+    create_prompt_property,
     generate_github_diff_url_in_pull_request,
     get_diff,
     get_files_changed_in_pull_request,
@@ -16,6 +17,7 @@ from chat_with_repo.pull_request_tools import (
     get_pull_requests,
     get_pull_requests_by_commit,
     get_pull_requests_by_path,
+    exclude_files_from_diff,
 )
 from chat_with_repo.model import Commit, CommitFilter, PullRequest, PullRequestFilter
 from chat_with_repo.tag_tools import find_tags_by_commit
@@ -230,6 +232,17 @@ def test_get_commits_by_pull_request():
     )
 
 
+def test_get_commits_by_pull_request_filter_all():
+    # Test case 1: Verify that the commits are returned correctly
+    owner = "smeup"
+    repo = "jariko"
+    number = 554
+    commits = get_commits_by_pull_request(
+        number=number, owner=owner, repo=repo, filter=lambda commit: False
+    )
+    assert len(commits) == 0
+
+
 def test_compare_commits():
     # Test case 1: Verify that the commits are returned correctly
     owner = "smeup"
@@ -417,6 +430,16 @@ def test_get_files_changed_in_pull_request():
     )
 
 
+def test_get_files_changed_in_pull_request_exlude_all():
+    owner = "smeup"
+    repo = "jariko"
+    number = 577
+    files = get_files_changed_in_pull_request(
+        number=number, owner=owner, repo=repo, filter=lambda x: x.changes < 0
+    )
+    assert len(files) == 0
+
+
 def test_generate_github_diff_url_in_pull_request():
     owner = "smeup"
     repo = "jariko"
@@ -429,3 +452,32 @@ def test_generate_github_diff_url_in_pull_request():
         diff_url
         == "https://github.com/smeup/jariko/pull/577/files#diff-f7be7d0ccf3fd32828f9fc29ae1689e278c2f9ce6801212356ac43721946d12c"
     )
+
+
+def test_exclude_files_from_diff():
+    owner = "smeup"
+    repo = "jariko"
+    diff = get_diff(number=577, owner=owner, repo=repo)
+    sanitize_diff = exclude_files_from_diff(
+        diff, ["rpgJavaInterpreter-core/src/test/resources/smeup/ERROR29.rpgle"]
+    )
+    assert (
+        "diff --git a/rpgJavaInterpreter-core/src/main/kotlin/com/smeup/rpgparser/parsing/parsetreetoast/api.kt"
+        in sanitize_diff
+    )
+    assert (
+        "+      * Sorgente di origine : SMEUP_DEV/JASRC(D5_091_04)" not in sanitize_diff
+    )
+    assert (
+        "diff --git a/rpgJavaInterpreter-core/src/test/resources/smeup/metadata/D5COSO0F.json"
+        in sanitize_diff
+    )
+
+def test_create_prompt_property():
+    owner = "smeup"
+    repo = "jariko"
+    number = 577
+    prompt_property = create_prompt_property(number=number, owner=owner, repo=repo)
+    assert len(prompt_property.commits) == 15
+    assert len(prompt_property.excluded_links_diff) == 1
+    assert len(prompt_property.links_diff) == 8

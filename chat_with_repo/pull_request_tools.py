@@ -21,6 +21,7 @@ from chat_with_repo.constants import (
     DESCRIBE_PULL_REQUEST_TEMPLATE,
 )
 from chat_with_repo.model import (
+    Commit,
     FileChange,
     PullRequest,
     PullRequestState,
@@ -148,6 +149,23 @@ class CodeReviewSchema(BaseModel):
     number: int = Field(..., description="The pull request number.")
 
 
+class PromptProperty:
+    def __init__(
+        self,
+        description: str,
+        diff: str,
+        commits: List[Commit],
+        links_diff: dict[str, str],
+        excluded_links_diff: dict[str, str],
+    ):
+        self.diff = diff
+        self.description = description
+        self.diff = diff
+        self.commits = commits
+        self.links_diff = links_diff
+        self.excluded_links_diff = excluded_links_diff
+
+
 class CodeReviewTool(BaseTool):
     args_schema: Type[BaseModel] = CodeReviewSchema
     state: State
@@ -157,47 +175,22 @@ class CodeReviewTool(BaseTool):
 
     def _run(self, number: int) -> str:
 
-        pull_request = get_pull_request_by_number(
-            number=number, owner=self.state.repo.owner, repo=self.state.repo.value
-        )
-
-        title = pull_request.title
-        body = "" if pull_request.body is None else pull_request.body
-
-        description = f"""
-        Title: {title} 
-        Body: {body}
-"""
-        commits = get_commits_by_pull_request(
-            number=number, owner=self.state.repo.owner, repo=self.state.repo.value
-        )
-
-        diff = get_diff(
-            number=number, owner=self.state.repo.owner, repo=self.state.repo.value
-        )
-
-        files_changed_in_pull_request = get_files_changed_in_pull_request(
-            number=number, owner=self.state.repo.owner, repo=self.state.repo.value
-        )
-
-        links_diff: dict[str, str] = {}
-        for file in files_changed_in_pull_request:
-            links_diff[file.filename] = generate_github_diff_url_in_pull_request(
-                number, file.filename, self.state.repo.owner, self.state.repo.value
-            )
-
         llm = ChatOpenAI(model=MODEL_NAME, api_key=OPENAI_API_KEY)
         prompt = ChatPromptTemplate.from_messages(
             [("system", CODE_REVIEW_SYSTEM_MESSAGE), ("user", CODE_REVIEW_TEMPLATE)]
         )
         chain = prompt | llm
+        prompt_property = create_prompt_property(
+            number=number, owner=self.state.repo.owner, repo=self.state.repo.value
+        )
         return chain.invoke(
             {
                 "input": self.state.messages[-1].content,
-                "description": description,
-                "diff": diff,
-                "commits": commits,
-                "links_diff": links_diff,
+                "description": prompt_property.description,
+                "diff": prompt_property.diff,
+                "commits": prompt_property.commits,
+                "links_diff": prompt_property.links_diff,
+                "excluded_links_diff": prompt_property.excluded_links_diff,
             }
         ).content
 
@@ -542,6 +535,28 @@ def get_diff(number: int, owner: str = "smeup", repo: str = "jariko") -> str:
         raise Exception(f"Error: {response.status_code} - {response.text}")
 
 
+def exclude_files_from_diff(diff: str, remove_file_with_paths: List[str]) -> str:
+    """
+    Removes the specified files from the diff content.
+
+    Args:
+        diff (str): The diff content.
+        remove_file_with_paths (List[str]): The paths of the files to remove.
+
+    Returns:
+        str: The diff content with the specified files removed.
+    """
+    diff_lines = diff.splitlines()
+    filtered_diff = []
+    skip = False
+    for line in diff_lines:
+        if line.startswith("diff --git"):
+            skip = any(path in line for path in remove_file_with_paths)
+        if not skip:
+            filtered_diff.append(line)
+    return "\n".join(filtered_diff)
+
+
 def generate_diff_hash(file_path: str) -> str:
     """
     Generates a diff hash for a given file path.
@@ -578,7 +593,10 @@ def generate_github_diff_url_in_pull_request(
 
 
 def get_files_changed_in_pull_request(
-    number: int, owner: str = "smeup", repo: str = "jariko"
+    number: int,
+    owner: str = "smeup",
+    repo: str = "jariko",
+    filter: Callable[[FileChange], bool] = lambda file_change: True,
 ) -> List[FileChange]:
     """
     Retrieves the list of files changed in a given pull request.
@@ -587,6 +605,7 @@ def get_files_changed_in_pull_request(
         number (int): The number of the pull request.
         owner (str, optional): The owner of the repository. Defaults to "smeup".
         repo (str, optional): The name of the repository. Defaults to "jariko".
+        filter (Callable[[FileChange], bool], optional): A function to filter the file changes. Defaults to lambda file_change: True means no filter.
 
     Returns:
         List[FileChange]: A list of FileChange objects representing the files changed in the pull request.
@@ -606,12 +625,78 @@ def get_files_changed_in_pull_request(
     while nextUrl:
         if response.status_code == 200:
             nextUrl = response.links.get("next", {}).get("url")
-            files_changed += [
-                FileChange.model_validate(file) for file in response.json()
-            ]
+            for file in response.json():
+                current_file = FileChange.model_validate(file)
+                if filter(current_file):
+                    files_changed.append(current_file)
         else:
             raise Exception(f"Error: {response.status_code} - {response.text}")
     return files_changed
+
+
+def create_prompt_property(number: int, owner="smeup", repo="jariko") -> PromptProperty:
+    """
+    Creates a PromptProperty object with the information of the pull request.
+        number (int): The number of the pull request.
+        owner (str, optional): The owner of the repository. Defaults to "smeup".
+        repo (str, optional): The name of the repository. Defaults to "jariko".
+    Returns: PromptProperty: The PromptProperty object with the information of the pull request.
+    """
+    pull_request = get_pull_request_by_number(number=number, owner=owner, repo=repo)
+
+    title: str = pull_request.title
+    body: str = "" if pull_request.body is None else pull_request.body
+
+    description: str = f"""
+    Title: {title} 
+    Body: {body}
+"""
+
+    excluded_file_names: List[str] = []
+
+    def filter_file_change(file_change: FileChange) -> bool:
+        if file_change.changes <= 500:
+            return True
+        else:
+            excluded_file_names.append(file_change.filename)
+            return False
+
+    files_changed_in_pull_request: List[FileChange] = get_files_changed_in_pull_request(
+        number=number, owner=owner, repo=repo, filter=filter_file_change
+    )
+
+    commits: List[Commit] = get_commits_by_pull_request(
+        number=number, owner=owner, repo=repo
+    )
+
+    diff: str = get_diff(number=number, owner=owner, repo=repo)
+
+    diff = exclude_files_from_diff(diff, excluded_file_names)
+
+    links_diff: dict[str, str] = {}
+    for file in files_changed_in_pull_request:
+        links_diff[file.filename] = generate_github_diff_url_in_pull_request(
+            number=number,
+            file_path=file.filename,
+            owner=owner,
+            repo=repo,
+        )
+
+    excluded_links_diff: dict[str, str] = {}
+    for file in excluded_file_names:
+        excluded_links_diff[file] = generate_github_diff_url_in_pull_request(
+            number=number,
+            file_path=file,
+            owner=owner,
+            repo=repo,
+        )
+    return PromptProperty(
+        diff=diff,
+        description=description,
+        commits=commits,
+        links_diff=links_diff,
+        excluded_links_diff=excluded_links_diff,
+    )
 
 
 def __extract_only_useful_information(text: str) -> str:

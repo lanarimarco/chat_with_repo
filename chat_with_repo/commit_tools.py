@@ -160,7 +160,10 @@ def get_commits_by_path(
 
 
 def get_commits_by_pull_request(
-    number: int, owner: str = "smeup", repo: str = "jariko"
+    number: int,
+    owner: str = "smeup",
+    repo: str = "jariko",
+    filter: Callable[[Commit], bool] = lambda commit: True,
 ) -> List[Commit]:
     """
     Retrieves the commits that have modified a given pull request.
@@ -169,6 +172,7 @@ def get_commits_by_pull_request(
         number (int): The number of the pull request.
         owner (str, optional): The owner of the repository. Defaults to "smeup".
         repo (str, optional): The name of the repository. Defaults to "jariko".
+        filter (Callable[[Commit], bool], optional): filter to apply to the commits. Defaults to lambda commit: True. No filter is applied.
 
     Returns:
         List[Commit]: A list of Commit representing the retrieved commits.
@@ -178,12 +182,23 @@ def get_commits_by_pull_request(
         "Accept": "application/vnd.github.v3+json",
         "Authorization": f"token {GITHUB_TOKEN}",
     }
-
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        return [Commit.model_validate(commit) for commit in response.json()]
-    else:
-        raise Exception(f"Error: {response.status_code} - {response.text}")
+    params = {
+        "per_page": 100,
+    }
+    nextUrl = url
+    commits = []
+    while nextUrl:
+        response = requests.get(nextUrl, headers=headers, params=params)
+        if response.status_code == 200:
+            nextUrl = response.links.get("next", {}).get("url")
+            # Process the commits as needed
+            for commit in response.json():
+                my_commit = Commit.model_validate(commit)
+                if filter(my_commit):
+                    commits.append(my_commit)
+        else:
+            raise Exception(f"Error: {response.status_code} - {response.text}")
+    return commits
 
 
 # https://docs.github.com/rest/commits/commits#compare-two-commits
