@@ -189,6 +189,7 @@ def test_get_pull_requests_by_commit():
         commit_sha=commit_sha, owner=owner, repo=repo
     )
 
+
     assert len(pull_requests) == 1
     assert pull_requests[0].number == 4
 
@@ -201,12 +202,20 @@ def test_get_pull_requests_by_commit():
 
     assert len(pull_requests) == 0
 
-    # Test case 2: Issue https://github.com/lanarimarco/chat_with_repo/issues/4
+    # Test case 3: Issue https://github.com/lanarimarco/chat_with_repo/issues/4
     commit_sha = "d0b158733fd4d4625bab3c4c854e49b67a89f422"
     pull_requests: List[PullRequest] = get_pull_requests_by_commit(
         commit_sha=commit_sha, owner=owner, repo="kokos-sdk-java-rpgle"
     )
     assert len(pull_requests) == 1
+
+    # Test case 4: issue in test_assistant test_get_title_by_commit
+    commit_sha = "5bc1da09bab1d53b28fbcfdcf9f01fd766bb3b05"
+    pull_requests: List[PullRequest] = get_pull_requests_by_commit(
+        commit_sha=commit_sha, owner=owner, repo="jariko"
+    )
+    assert len(pull_requests) == 1
+
 
 
 def test_get_commits_by_path():

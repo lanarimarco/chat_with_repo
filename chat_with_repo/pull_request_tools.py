@@ -15,11 +15,7 @@ from chat_with_repo.commit_tools import (
     get_commits_by_pull_request,
     is_commit_in_base,
 )
-from chat_with_repo.constants import (
-    CODE_REVIEW_SYSTEM_MESSAGE,
-    CODE_REVIEW_TEMPLATE,
-    DESCRIBE_PULL_REQUEST_TEMPLATE,
-)
+from chat_with_repo.constants import CODE_REVIEW_SYSTEM_MESSAGE, CODE_REVIEW_TEMPLATE
 from chat_with_repo.model import (
     Commit,
     FileChange,
@@ -193,31 +189,6 @@ class CodeReviewTool(BaseTool):
                 "excluded_links_diff": prompt_property.excluded_links_diff,
             }
         ).content
-
-
-class DescribePullRequestSchema(BaseModel):
-    number: int = Field(..., description="The number of the pull request.")
-
-
-class DescribePullRequestTool(BaseTool):
-    state: State
-    args_schema: Type[BaseModel] = DescribePullRequestSchema
-    name: str = "describe_pull_request"
-    description = "Describes the changes of a pull request."
-    return_direct = True
-
-    def _run(self, number: int) -> str:
-
-        diff = get_diff(
-            number=number, owner=self.state.repo.owner, repo=self.state.repo.value
-        )
-
-        llm = ChatOpenAI(model=MODEL_NAME, api_key=OPENAI_API_KEY)
-        prompt = ChatPromptTemplate.from_messages(
-            [("system", DESCRIBE_PULL_REQUEST_TEMPLATE), ("user", "{diff}")]
-        )
-        chain = prompt | llm
-        return chain.invoke({"diff": diff}).content
 
 
 # This tool is into this module to avoid circular imports

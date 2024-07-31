@@ -12,7 +12,6 @@ from chat_with_repo.misc_tools import SelectGitHubRepoTool
 from chat_with_repo.model import State
 from chat_with_repo.pull_request_tools import (
     CodeReviewTool,
-    DescribePullRequestTool,
     GetPullRequestByNumberTool,
     GetPullRequestsByCommitTool,
     GetPullRequestByPathTool,
@@ -92,7 +91,6 @@ class GitHubAssistant:
                 GetPullRequestsByCommitTool(state=self.state, topK=self.topK),
                 GetPullRequestByPathTool(state=self.state, topK=self.topK),
                 CodeReviewTool(state=self.state),
-                DescribePullRequestTool(state=self.state),
                 GetCommitByShaTool(state=self.state),
                 IsCommitInBranchTool(state=self.state),
                 IsCommitInBaseTool(state=self.state),
