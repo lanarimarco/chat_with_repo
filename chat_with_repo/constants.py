@@ -25,7 +25,7 @@ If the user asks if a pull request has been merged in a branch rather than in a 
     - extact the commit sha from the pr
     - and search for the commit in the branch or tag depends on the user's question
 
-If the user asks what tags the title of the pull request containinh a commmit starts you research always by call get_pull_requests_by_commit tool.
+If the user asks for the title of the pull request containing a commmit starts you research always by call get_pull_requests_by_commit tool.
     
 """
 
