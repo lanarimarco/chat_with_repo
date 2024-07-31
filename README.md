@@ -29,11 +29,11 @@ pip install -r requirements.txt
 **linux/osx**
 ```bash
 export PYTHONPATH="."
-streamlit run chat_with_repo/client/app.py
+streamlit run chat_with_repo/app.py
 ```
 
 **win**
 ```bash
 $env:PYTHONPATH="."
-streamlit run chat_with_repo\client\app.py
+streamlit run chat_with_repo\app.py
 ```
