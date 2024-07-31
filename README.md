@@ -24,16 +24,16 @@ pip install -r requirements.txt
 - set the following variables in .env
   - `GITHUB_TOKEN`
   - `OPENAI_API_KEY`
+  - `UTHORIZED_USERS`
+  - `MODEL_NAME`
 
 ## Run
 **linux/osx**
 ```bash
-export PYTHONPATH="."
 streamlit run chat_with_repo/app.py
 ```
 
 **win**
 ```bash
-$env:PYTHONPATH="."
 streamlit run chat_with_repo\app.py
 ```

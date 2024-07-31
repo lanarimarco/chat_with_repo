@@ -1,3 +1,9 @@
+import os
+import sys
+
+pythonpath = os.path.dirname(os.path.dirname(__file__))
+sys.path.append(pythonpath)
+
 import streamlit as st
 from chat_with_repo.assistant import GitHubAssistant
 from enum import Enum
@@ -23,7 +29,7 @@ authorization_manager = AuthorizationManager()
 
 def main():
 
-    st.title("Chat with smeup repo")
+    st.title("Chat with repo")
 
     user = get_user()
 
