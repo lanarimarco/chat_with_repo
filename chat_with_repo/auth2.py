@@ -35,11 +35,11 @@ def __redirect_to_auth():
     authorization_url, state = flow.authorization_url(
         access_type="offline", prompt="select_account"
     )
-    st.markdown(
-        f'<meta http-equiv="refresh" content="0;URL={authorization_url}">',
-        unsafe_allow_html=True,
-    )
-    # st.write(f"Please go to this URL and authorize access: {authorization_url}")
+    # st.markdown(
+    #     f'<meta http-equiv="refresh" content="0;URL={authorization_url}">',
+    #     unsafe_allow_html=True,
+    # )
+    st.write(f"Please go to this URL and authorize access: {authorization_url}")
 
 
 # Handle the OAuth 2.0 server response
