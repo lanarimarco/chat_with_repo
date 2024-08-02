@@ -2,7 +2,7 @@ import streamlit as st
 from google_auth_oauthlib.flow import InstalledAppFlow
 import requests
 
-from chat_with_repo import CLIENT_SECRET_PATH, DEBUG, SCOPES
+from chat_with_repo import CLIENT_SECRET, DEBUG, REDIRECT_URI, SCOPES
 from chat_with_repo.users import User
 
 __debug_user = User(email="debuguser@debug.it", name="Debug User", avatar="😎")
@@ -23,8 +23,8 @@ def get_user() -> User:
 
 
 def __create_flow() -> InstalledAppFlow:
-    flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRET_PATH, SCOPES)
-    flow.redirect_uri = "http://localhost:8501/"
+    flow = InstalledAppFlow.from_client_config(CLIENT_SECRET, SCOPES)
+    flow.redirect_uri = REDIRECT_URI
     return flow
 
 
