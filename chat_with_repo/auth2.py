@@ -1,5 +1,6 @@
 import streamlit as st
 from google_auth_oauthlib.flow import InstalledAppFlow
+from oauthlib.oauth2 import InvalidGrantError
 import requests
 
 from chat_with_repo import CLIENT_SECRET, DEBUG, REDIRECT_URI, SCOPES
@@ -13,13 +14,15 @@ def get_user() -> User:
         return __debug_user
     if st.session_state.get("user", ""):
         return st.session_state["user"]
-    else:
-        if st.query_params.get("code", ""):
+    elif st.query_params.get("code", ""):
+        try:
             __handle_auth_response()
             st.session_state["authenticated"] = True
             return st.session_state["user"]
-        if st.button("Login with Google"):
+        except InvalidGrantError as e:
             __redirect_to_auth()
+    else:
+        __redirect_to_auth()
 
 
 def __create_flow() -> InstalledAppFlow:
@@ -39,7 +42,9 @@ def __redirect_to_auth():
     #     f'<meta http-equiv="refresh" content="0;URL={authorization_url}">',
     #     unsafe_allow_html=True,
     # )
-    st.write(f"Please go to this URL and authorize access: {authorization_url}")
+    # st.write(f"Please go to this URL and authorize access: {authorization_url}")
+    st.write("Please go to this [link](%s) to authorize the access" % authorization_url)
+    st.write("After you have authorized the access, close this page.")
 
 
 # Handle the OAuth 2.0 server response
